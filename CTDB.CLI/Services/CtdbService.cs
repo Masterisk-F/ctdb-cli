@@ -260,8 +260,8 @@ namespace CTDB.CLI.Services
                 string artist = string.IsNullOrEmpty(cueSheet.Metadata.Artist) ? string.Empty : cueSheet.Metadata.Artist;
                 string title = string.IsNullOrEmpty(cueSheet.Metadata.Title) ? string.Empty : cueSheet.Metadata.Title;
                 
-                Console.WriteLine($"Artist: {string.IsNullOrEmpty(cueSheet.Metadata.Artist) ? "Unknown" : cueSheet.Metadata.Artist}");
-                Console.WriteLine($"Title: {string.IsNullOrEmpty(cueSheet.Metadata.Title) ? "Unknown" : cueSheet.Metadata.Title}");
+                Console.WriteLine($"Artist: {(string.IsNullOrEmpty(cueSheet.Metadata.Artist) ? "Unknown" : cueSheet.Metadata.Artist)}");
+                Console.WriteLine($"Title: {(string.IsNullOrEmpty(cueSheet.Metadata.Title) ? "Unknown" : cueSheet.Metadata.Title)}");
                 Console.WriteLine("Submitting...");
                 
                 var resp = ctdb.Submit(1, 100, artist, title, "");
