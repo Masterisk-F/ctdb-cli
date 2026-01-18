@@ -11,7 +11,6 @@ A Linux command-line tool that interacts with CTDB (CUETools Database) to perfor
 ## Setup
 
 This tool depends on libraries from [cuetools.net](https://github.com/gchudov/cuetools.net).
-To ensure build compatibility on Linux, dependencies are fetched and patched via a setup script rather than using submodules.
 
 ### Build and Install
 

@@ -11,7 +11,6 @@ CTDB (CUETools Database) と対話し、CUEシートと音声ファイルを用�
 ## セットアップ
 
 本ツールは [cuetools.net](https://github.com/gchudov/cuetools.net) のライブラリに依存しています。
-Linux上でのビルド互換性を確保するため、サブモジュールではなくセットアップスクリプト経由で依存関係を取得・パッチ適用します。
 
 ### ビルドとインストール
 
