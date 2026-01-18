@@ -13,7 +13,8 @@ namespace CTDB.CLI
                 Console.WriteLine("Commands:");
                 Console.WriteLine("  lookup   - Lookup metadata from CTDB");
                 Console.WriteLine("  calc     - Calculate parity");
-                Console.WriteLine("  verify   - Verify and repair");
+                Console.WriteLine("  verify   - Verify against CTDB");
+                Console.WriteLine("  repair   - Repair using CTDB parity");
                 Console.WriteLine("  upload   - Upload parity");
                 return;
             }
@@ -44,6 +45,9 @@ namespace CTDB.CLI
                         break;
                     case "upload":
                         service.Upload(cuePath);
+                        break;
+                    case "repair":
+                        service.Repair(cuePath);
                         break;
                     default:
                         Console.WriteLine($"Unknown command: {command}");

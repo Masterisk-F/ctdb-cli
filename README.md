@@ -82,9 +82,20 @@ Matches data on CTDB with local files to verify the accuracy of the rip.
 ctdb-cli verify test.cue
 ```
 
-#### 4. Upload
+#### 4. Repair
+Uses CTDB parity data to repair errors in a ripped file.
+The repaired file is saved as `original_filename_repaired.wav`.
+```bash
+ctdb-cli repair test.cue
+```
+
+> **Note**: Repair requires sufficient parity data in CTDB.
+> If repair is not possible, an error message will be displayed.
+
+#### 5. Upload
 Sends calculated parity and metadata to CTDB.
 **Please execute this only when you are highly confident that the data is correct.**
 ```bash
 ctdb-cli upload test.cue
 ```
+

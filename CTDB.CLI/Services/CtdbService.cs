@@ -280,5 +280,174 @@ namespace CTDB.CLI.Services
                 Console.WriteLine(ex.StackTrace);
             }
         }
+
+        public void Repair(string cuePath)
+        {
+            Console.WriteLine($"Repairing: {cuePath}");
+            try
+            {
+                var cueSheet = new CUESheet(_config);
+                cueSheet.Open(cuePath);
+                var toc = cueSheet.TOC;
+
+                Console.WriteLine($"TOC ID: {toc.TOCID}");
+
+                // Verification phase: same as Verify
+                var ar = new AccurateRipVerify(toc, _config.GetProxy());
+                var ctdb = new CUEToolsDB(toc, _config.GetProxy());
+                ctdb.Init(ar);
+
+                string? audioPath = FindAudioPath(cuePath);
+                if (audioPath == null)
+                {
+                    Console.WriteLine("Error: Audio file not found.");
+                    return;
+                }
+
+                // Determine output file path and check if it already exists
+                string outputPath = Path.Combine(
+                    Path.GetDirectoryName(audioPath) ?? ".",
+                    Path.GetFileNameWithoutExtension(audioPath) + "_repaired.wav"
+                );
+
+                if (File.Exists(outputPath))
+                {
+                    Console.WriteLine($"Error: Output file already exists: {outputPath}");
+                    Console.WriteLine("Please remove or rename the existing file and try again.");
+                    return;
+                }
+
+                if (!FeedAudioToAR(ar, cueSheet, cuePath)) return;
+
+                Console.WriteLine("Contacting CTDB...");
+                ctdb.ContactDB(null, "ctdb-cli", null, true, false, CTDBMetadataSearch.Default);
+
+                if (ctdb.Metadata == null && ctdb.Entries == null)
+                {
+                     Console.WriteLine($"CTDB returned {ctdb.QueryResponseStatus}");
+                     return;
+                }
+
+                Console.WriteLine("Verifying...");
+                ctdb.DoVerify();
+
+                Console.WriteLine($"Status: {ctdb.Status}");
+
+                // Find a repairable entry
+                CUETools.CTDB.DBEntry? repairableEntry = null;
+                foreach (var entry in ctdb.Entries)
+                {
+                    if (entry.hasErrors && entry.canRecover && entry.repair != null)
+                    {
+                        // Select the entry with the highest confidence
+                        if (repairableEntry == null || entry.conf > repairableEntry.conf)
+                        {
+                            repairableEntry = entry;
+                        }
+                    }
+                }
+
+                if (repairableEntry == null)
+                {
+                    // No repairable entry found
+                    bool hasAnyErrors = false;
+                    foreach (var entry in ctdb.Entries)
+                    {
+                        if (entry.hasErrors)
+                        {
+                            hasAnyErrors = true;
+                            break;
+                        }
+                    }
+
+                    if (!hasAnyErrors)
+                    {
+                        Console.WriteLine("No errors detected. The file does not need repair.");
+                    }
+                    else
+                    {
+                        Console.WriteLine("Errors detected but cannot be recovered.");
+                        Console.WriteLine("The CTDB does not have sufficient parity data to repair this file.");
+                    }
+                    return;
+                }
+
+                Console.WriteLine($"Found repairable entry (confidence: {repairableEntry.conf}):");
+                Console.WriteLine($"  Correctable Errors: {repairableEntry.repair.CorrectableErrors}");
+                Console.WriteLine($"  Affected Sectors: {repairableEntry.repair.AffectedSectors}");
+
+                // Repair and write phase
+                Console.WriteLine($"Writing repaired audio to: {outputPath}");
+
+                var audioSource = AudioReadWrite.GetAudioSource(audioPath, null, _config);
+                if (audioSource == null)
+                {
+                    Console.WriteLine("Error: Failed to open audio source for repair.");
+                    return;
+                }
+
+                var pcm = new AudioPCMConfig(16, 2, 44100);
+                var encoderSettings = new CUETools.Codecs.WAV.EncoderSettings(pcm);
+                var audioDest = new CUETools.Codecs.WAV.AudioEncoder(encoderSettings, outputPath, null);
+                audioDest.FinalSampleCount = audioSource.Length;
+
+                var buffer = new AudioBuffer(audioSource, 1024 * 64);
+                long samplesWritten = 0;
+
+                while (audioSource.Read(buffer, -1) != 0)
+                {
+                    // Fix errors in the buffer using repair.Write()
+                    repairableEntry.repair.Write(buffer);
+                    audioDest.Write(buffer);
+                    samplesWritten += buffer.Length;
+                    Console.Write(".");
+                }
+
+                repairableEntry.repair.Close();
+                audioDest.Close();
+                audioSource.Close();
+
+                Console.WriteLine();
+                Console.WriteLine($"Repair completed successfully!");
+                Console.WriteLine($"Output: {outputPath}");
+                Console.WriteLine($"Samples written: {samplesWritten}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error during repair: {ex.Message}");
+                Console.WriteLine(ex.StackTrace);
+            }
+        }
+
+        // Helper to get the audio file path
+        private string? FindAudioPath(string cuePath)
+        {
+            string? audioPath = null;
+            var lines = File.ReadAllLines(cuePath);
+            foreach (var line in lines)
+            {
+                if (line.Trim().StartsWith("FILE") && line.EndsWith("WAVE"))
+                {
+                    var parts = line.Trim().Split('"');
+                    if (parts.Length >= 2)
+                    {
+                        audioPath = Path.Combine(Path.GetDirectoryName(cuePath) ?? ".", parts[1]);
+                        break;
+                    }
+                }
+            }
+
+            if (audioPath == null || !File.Exists(audioPath))
+            {
+                var altPath = Path.ChangeExtension(cuePath, ".wav");
+                if (File.Exists(altPath)) audioPath = altPath;
+            }
+
+            if (audioPath != null && File.Exists(audioPath))
+            {
+                return audioPath;
+            }
+            return null;
+        }
     }
 }
