@@ -2,6 +2,7 @@
 # Standard .NET gitignore
 bin/
 obj/
+config.mk
 .idea/
 .vscode/
 *.user
