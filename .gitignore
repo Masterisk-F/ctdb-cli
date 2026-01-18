@@ -16,6 +16,9 @@ Thumbs.db
 # Dependencies
 external/
 
+#build files
+publish/
+
 # Test files
 *.wav
 *.cue
