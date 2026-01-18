@@ -1,5 +1,5 @@
---- external/cuetools.net/ThirdParty/taglib-sharp/src/TaglibSharp/TaglibSharp.csproj	2026-01-18 19:25:02.220686481 +0900
-+++ /tmp/external_backup/cuetools.net/ThirdParty/taglib-sharp/src/TaglibSharp/TaglibSharp.csproj	2026-01-18 19:24:00.703766409 +0900
+--- external/cuetools.net/ThirdParty/taglib-sharp/src/TaglibSharp/TaglibSharp.csproj
++++ external/cuetools.net/ThirdParty/taglib-sharp/src/TaglibSharp/TaglibSharp.csproj	2026-01-18 19:53:44.277075944 +0900
 @@ -1,6 +1,8 @@
  <Project Sdk="Microsoft.NET.Sdk">
  
@@ -9,3 +9,40 @@
      <TargetFrameworks>$(LibTargetFrameworks)</TargetFrameworks>
      <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\TaglibSharp.xml</DocumentationFile>
      <AssemblyName>TagLibSharp</AssemblyName>
+--- external/cuetools.net/ThirdParty/taglib-sharp/src/TaglibSharp/Tag.cs
++++ external/cuetools.net/ThirdParty/taglib-sharp/src/TaglibSharp/Tag.cs	2026-01-18 20:01:18.286802500 +0900
+@@ -1631,5 +1631,20 @@
+ 
+ 			return true;
+ 		}
++
++		public virtual string CatalogNo {
++			get { return null; }
++			set { }
++		}
++
++		public virtual string DiscSubtitle {
++			get { return null; }
++			set { }
++		}
++
++		public virtual string ReleaseDate {
++			get { return null; }
++			set { }
++		}
+ 	}
+ }
+--- external/cuetools.net/ThirdParty/taglib-sharp/src/TaglibSharp/Properties.cs
++++ external/cuetools.net/ThirdParty/taglib-sharp/src/TaglibSharp/Properties.cs	2026-01-18 20:00:53.018664652 +0900
+@@ -452,5 +452,11 @@
+ 		}
+ 
+ 		#endregion
++
++		public long AudioSampleCount {
++			get {
++				return (long)(Duration.TotalSeconds * AudioSampleRate);
++			}
++		}
+ 	}
+ }
