@@ -1,11 +1,12 @@
 # ctdb-cli
 
-CTDB (CUETools Database) と対話し、CUEシートと音声ファイルを用いてメタデータの取得、パリティ計算、検証、アップロードを行う Linux 用コマンドラインツール
+CTDB (CUETools Database) と対話し、CUEシートと音声ファイルを用いてメタデータの取得、パリティ計算、検証、修復、アップロードを行う Linux 用コマンドラインツール
 
 ## 特徴
-- CUE + WAV からの AccurateRip / CTDB パリティ計算
-- CTDB へのメタデータおよびパリティのアップロード
-- Linux (.NET 8.0) 環境での動作サポート
+1. CUE + WAV からの CTDB パリティ計算
+2. CTDBパリティデータを使用したエラー修復
+3. CTDB へのメタデータおよびパリティのアップロード
+4. Linux (.NET 8.0) 環境での動作サポート
 
 ## セットアップ
 

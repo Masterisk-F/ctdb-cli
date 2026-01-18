@@ -1,11 +1,12 @@
 # ctdb-cli
 
-A Linux command-line tool that interacts with CTDB (CUETools Database) to perform metadata retrieval, parity calculation, verification, and uploading using CUE sheets and audio files.
+A Linux command-line tool that interacts with CTDB (CUETools Database) to perform metadata retrieval, parity calculation, verification, repair, and uploading using CUE sheets and audio files.
 
 ## Features
-- AccurateRip / CTDB parity calculation from CUE + WAV
-- Uploading metadata and parity to CTDB
-- Support for Linux (.NET 8.0) environment
+1. CTDB parity calculation from CUE + WAV
+2. Error repair using CTDB parity data
+3. Uploading metadata and parity to CTDB
+4. Support for Linux (.NET 8.0) environment
 
 ## Setup
 
