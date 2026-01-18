@@ -16,6 +16,11 @@ namespace CTDB.CLI.Services
 
         public CtdbService()
         {
+            // Register FLAC decoder manually (to avoid relying on plugins folder structure in published builds)
+            if (!CUEProcessorPlugins.decs.Exists(d => d is CUETools.Codecs.Flake.DecoderSettings))
+            {
+                CUEProcessorPlugins.decs.Add(new CUETools.Codecs.Flake.DecoderSettings());
+            }
             _config = new CUEConfig();
         }
 
@@ -167,7 +172,7 @@ namespace CTDB.CLI.Services
                 var lines = File.ReadAllLines(cuePath);
                 foreach(var line in lines)
                 {
-                    if (line.Trim().StartsWith("FILE") && line.EndsWith("WAVE")) // naive
+                    if (line.Trim().StartsWith("FILE"))
                     {
                         var parts = line.Trim().Split('\"');
                         if (parts.Length >= 2)
@@ -429,7 +434,7 @@ namespace CTDB.CLI.Services
             var lines = File.ReadAllLines(cuePath);
             foreach (var line in lines)
             {
-                if (line.Trim().StartsWith("FILE") && line.EndsWith("WAVE"))
+                if (line.Trim().StartsWith("FILE"))
                 {
                     var parts = line.Trim().Split('"');
                     if (parts.Length >= 2)

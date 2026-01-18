@@ -7,6 +7,7 @@
     <ProjectReference Include="..\external\cuetools.net\CUETools.AccurateRip\CUETools.AccurateRip.csproj" />
     <ProjectReference Include="..\external\cuetools.net\CUETools.CDImage\CUETools.CDImage.csproj" />
     <ProjectReference Include="..\external\cuetools.net\CUETools.Processor\CUETools.Processor.csproj" />
+    <ProjectReference Include="..\external\cuetools.net\CUETools.Codecs.Flake\CUETools.Codecs.Flake.csproj" />
   </ItemGroup>
 
   <ItemGroup>
