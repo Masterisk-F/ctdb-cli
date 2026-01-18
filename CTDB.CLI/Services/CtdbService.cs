@@ -118,15 +118,38 @@ namespace CTDB.CLI.Services
                 
                 Console.WriteLine($"Confidence: {ctdb.Confidence}");
                 Console.WriteLine($"Status: {ctdb.Status}");
+                Console.WriteLine($"Total Entries: {ctdb.Total}");
                 
-                int i = 0;
+                int entryIndex = 0;
                 foreach(var entry in ctdb.Entries)
                 {
-                    i++;
-                    Console.WriteLine($"Entry {i}: Conf={entry.conf}, CRC={entry.crc:x8}, Status={entry.Status}");
-                    if (entry.hasErrors)
+                    entryIndex++;
+                    Console.WriteLine($"------------------------------------------------------------");
+                    Console.WriteLine($"Entry {entryIndex}:");
+                    Console.WriteLine($"  Conf: {entry.conf}, CRC: {entry.crc:x8}, Offset: {entry.offset}");
+                    Console.WriteLine($"  Status: {entry.Status}");
+                    Console.WriteLine($"  HasErrors: {entry.hasErrors}, CanRecover: {entry.canRecover}");
+                    Console.WriteLine($"  TOC: {entry.toc.TOCID}");
+
+                    if (entry.trackcrcs != null)
                     {
-                        Console.WriteLine($"  Errors: {entry.hasErrors}, Repairable: {entry.canRecover}");
+                        Console.WriteLine($"  Track CRCs:");
+                        for (int i = 0; i < entry.trackcrcs.Length; i++)
+                        {
+                            uint localCrc = ctdb.Verify.TrackCRC(i + 1, -entry.offset);
+                            uint remoteCrc = entry.trackcrcs[i];
+                            bool matched = (localCrc == remoteCrc);
+                            string matchStatus = matched ? "Matched" : "Unmatched";
+                            
+                            Console.WriteLine($"    Track {i + 1:00}: Local={localCrc:x8} Remote={remoteCrc:x8} [{matchStatus}]");
+                        }
+                    }
+
+                    if (entry.hasErrors && entry.canRecover && entry.repair != null)
+                    {
+                        Console.WriteLine($"  Repair Info:");
+                        Console.WriteLine($"    Correctable Errors: {entry.repair.CorrectableErrors}");
+                        Console.WriteLine($"    Affected Sectors: {entry.repair.AffectedSectors}");
                     }
                 }
             }
