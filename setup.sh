@@ -1,16 +1,23 @@
 #!/bin/bash
 set -e
 
+CUETOOLS_VERSION="v2.2.6"
+
 # Clone CUETools if not present
 if [ ! -d "external/cuetools.net" ]; then
-    echo "Cloning cuetools.net..."
+    echo "Cloning cuetools.net ($CUETOOLS_VERSION)..."
     mkdir -p external
-    git clone https://github.com/gchudov/cuetools.net.git external/cuetools.net
+    git clone --branch $CUETOOLS_VERSION https://github.com/gchudov/cuetools.net.git external/cuetools.net
     cd external/cuetools.net
     git submodule update --init --recursive
     cd ../..
 else
-    echo "cuetools.net already exists. Skipping clone."
+    echo "cuetools.net already exists. Ensuring version $CUETOOLS_VERSION..."
+    cd external/cuetools.net
+    git fetch origin
+    git checkout $CUETOOLS_VERSION
+    git submodule update --init --recursive
+    cd ../..
 fi
 
 # Apply patches
