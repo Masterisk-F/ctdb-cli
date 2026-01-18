@@ -29,6 +29,27 @@ CTDB (CUETools Database) と対話し、CUEシートと音声ファイルを用�
 dotnet build CTDB.CLI/CTDB.CLI.csproj
 ```
 
+## ビルド成果物の配布 (Distribution)
+
+他者に配布する場合や、単体で実行可能な状態にするには `publish` コマンドを使用してください。
+
+### 1. 軽量版 (Framework-dependent)
+相手が .NET 8.0 Runtime をインストールしている場合におすすめです。サイズが小さいです。
+```bash
+dotnet publish CTDB.CLI/CTDB.CLI.csproj -c Release -o publish/dependent
+```
+- **配布物**: `publish/dependent` フォルダの中身すべて（DLLファイル等を含む）
+- **サイズ**: 約 4 MB
+
+### 2. 単体動作版 (Self-contained / Single File)
+相手の環境に .NET がなくても動作します。1つの実行ファイルにまとまりますが、サイズは大きくなります。
+```bash
+dotnet publish CTDB.CLI/CTDB.CLI.csproj -c Release -r linux-x64 --self-contained -p:PublishSingleFile=true -o publish/standalone
+```
+- **配布物**: `publish/standalone/CTDB.CLI` (この1ファイルのみで動作します)
+- **サイズ**: 約 68 MB
+
+
 ## 使用方法
 
 `dotnet run` を使用するか、ビルド済みバイナリを使用します。
