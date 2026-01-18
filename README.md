@@ -12,10 +12,21 @@ A Linux command-line tool that interacts with CTDB (CUETools Database) to perfor
 This tool depends on libraries from [cuetools.net](https://github.com/gchudov/cuetools.net).
 To ensure build compatibility on Linux, dependencies are fetched and patched via a setup script rather than using submodules.
 
-### 1. Fetch Dependencies and Apply Patches
+### Build and Install
 
-Run the following script to fetch the cuetools.net source code and apply patches for Linux build compatibility.
+```bash
+./configure
+make
+sudo make install
+```
 
+Options:
+- `./configure --prefix=/usr` - Change install prefix (default: `/usr/local`)
+- `make DESTDIR=/path/to/dest install` - Specify DESTDIR for packaging
+
+### Development Build
+
+Fetch dependencies and apply patches:
 ```bash
 ./setup.sh
 ```
@@ -24,27 +35,19 @@ Run the following script to fetch the cuetools.net source code and apply patches
 > - **Freedb.csproj**: The original project file uses an old format that is not correctly handled by `dotnet build` on Linux, so it is converted to the SDK-style format.
 > - **TagLib**: The original `CUESheet.cs` depends on some properties (like `AudioSampleCount`) that are missing in the current TagLib Sharp, so a fix is applied to compensate for this.
 
-### 2. Build
-
-#### Test Build
-
+Build:
 ```bash
+# Test build
 dotnet build CTDB.CLI/CTDB.CLI.csproj
-```
 
-#### Distribution Build (Framework-dependent)
-Lightweight version.
-
-```bash
+# Framework-dependent (lightweight)
 dotnet publish CTDB.CLI/CTDB.CLI.csproj -c Release -o publish/dependent
-```
 
-#### Distribution Build (Self-contained / Single File)
-Works even if .NET is not installed on the target machine, but the file size will be larger.
-
-```bash
+# Self-contained / Single File
+# Works even if .NET is not installed on the target machine, but the file size will be larger.
 dotnet publish CTDB.CLI/CTDB.CLI.csproj -c Release -r linux-x64 --self-contained -p:PublishSingleFile=true -o publish/standalone
 ```
+
 
 ## Usage
 
