@@ -1,85 +1,87 @@
-# CTDB CLI Tool
+# ctdb-cli
 
-CTDB (CUETools Database) と対話し、CUEシートと音声ファイルを用いてメタデータの取得、パリティ計算、検証、アップロードを行う Linux 用コマンドラインツールです。
+A Linux command-line tool that interacts with CTDB (CUETools Database) to perform metadata retrieval, parity calculation, verification, and uploading using CUE sheets and audio files.
 
-## 特徴
-- CUE + WAV からの AccurateRip / CTDB パリティ計算
-- CTDB へのメタデータおよびパリティのアップロード
-- Linux (.NET 8.0) 環境での動作サポート
+## Features
+- AccurateRip / CTDB parity calculation from CUE + WAV
+- Uploading metadata and parity to CTDB
+- Support for Linux (.NET 8.0) environment
 
-## セットアップ
+## Setup
 
-本ツールは `cuetools.net` のライブラリに依存していますが、Linux上でのビルド互換性を確保するため、サブモジュールではなくセットアップスクリプト経由で依存関係を取得・パッチ適用します。
+This tool depends on libraries from [cuetools.net](https://github.com/gchudov/cuetools.net).
+To ensure build compatibility on Linux, dependencies are fetched and patched via a setup script rather than using submodules.
 
-### 1. 依存関係の取得とパッチ適用
+### 1. Fetch Dependencies and Apply Patches
 
-以下のスクリプトを実行して、`cuetools.net` のソースコードを取得し、Linuxビルド用の修正パッチを適用します。
+Run the following script to fetch the cuetools.net source code and apply patches for Linux build compatibility.
 
 ```bash
 ./setup.sh
 ```
 
-**パッチが必要な理由について**:
-- **Freedb.csproj**: オリジナルのプロジェクトファイルは古い形式であり、Linux上の `dotnet build` で正しく扱えないため、SDKスタイル形式に変換しています。
-- **TagLib**: オリジナルの `CUESheet.cs` が依存している一部のプロパティ（`AudioSampleCount`等）が現在の TagLib Sharp に不足しているため、これを補う修正を適用しています。
+> **Why Patches Are Needed**
+> - **Freedb.csproj**: The original project file uses an old format that is not correctly handled by `dotnet build` on Linux, so it is converted to the SDK-style format.
+> - **TagLib**: The original `CUESheet.cs` depends on some properties (like `AudioSampleCount`) that are missing in the current TagLib Sharp, so a fix is applied to compensate for this.
 
-### 2. ビルド
+### 2. Build
+
+#### Test Build
 
 ```bash
 dotnet build CTDB.CLI/CTDB.CLI.csproj
 ```
 
-## ビルド成果物の配布 (Distribution)
+#### Distribution Build (Framework-dependent)
+Lightweight version.
 
-他者に配布する場合や、単体で実行可能な状態にするには `publish` コマンドを使用してください。
-
-### 1. 軽量版 (Framework-dependent)
-相手が .NET 8.0 Runtime をインストールしている場合におすすめです。サイズが小さいです。
 ```bash
 dotnet publish CTDB.CLI/CTDB.CLI.csproj -c Release -o publish/dependent
 ```
-- **配布物**: `publish/dependent` フォルダの中身すべて（DLLファイル等を含む）
-- **サイズ**: 約 4 MB
 
-### 2. 単体動作版 (Self-contained / Single File)
-相手の環境に .NET がなくても動作します。1つの実行ファイルにまとまりますが、サイズは大きくなります。
+#### Distribution Build (Self-contained / Single File)
+Works even if .NET is not installed on the target machine, but the file size will be larger.
+
 ```bash
 dotnet publish CTDB.CLI/CTDB.CLI.csproj -c Release -r linux-x64 --self-contained -p:PublishSingleFile=true -o publish/standalone
 ```
-- **配布物**: `publish/standalone/CTDB.CLI` (この1ファイルのみで動作します)
-- **サイズ**: 約 68 MB
 
+## Usage
 
-## 使用方法
+Use `dotnet run` or the built binary.
 
-`dotnet run` を使用するか、ビルド済みバイナリを使用します。
+```bash
+ctdb-cli <command> <cue_file>
+```
 
 ```bash
 dotnet run --project CTDB.CLI/CTDB.CLI.csproj -- <command> <cue_file>
 ```
 
-### コマンド一覧
 
-#### 1. Lookup (メタデータ検索)
-CUEシートに基づいてCTDBからメタデータを検索し、Raw XMLを表示します。
+### Commands
+
+#### 1. Lookup
+Searches for metadata from CTDB based on the CUE sheet and displays Raw XML.
 ```bash
-dotnet run --project CTDB.CLI/CTDB.CLI.csproj -- lookup test.cue
+ctdb-cli lookup test.cue
 ```
 
-#### 2. Calc (パリティ/CRC計算)
-ローカルの音声ファイルを読み込み、AccurateRip CRC および CTDB CRC を計算します。
+#### 2. Calc
+Reads local audio files and calculates AccurateRip CRC and CTDB CRC.
 ```bash
-dotnet run --project CTDB.CLI/CTDB.CLI.csproj -- calc test.cue
+ctdb-cli calc test.cue
 ```
 
-#### 3. Verify (検証)
-CTDB上のデータとローカルファイルを照合し、リッピングの正確性を検証します。
+#### 3. Verify
+Matches data on CTDB with local files to verify the accuracy of the rip.
 ```bash
-dotnet run --project CTDB.CLI/CTDB.CLI.csproj -- verify test.cue
+ctdb-cli verify test.cue
 ```
 
-#### 4. Upload (アップロード)
-計算したパリティとメタデータをCTDBに送信します。
+#### 4. Upload
+Sends calculated parity and metadata to CTDB.
+**Please execute this only when you are highly confident that the data is correct.**
 ```bash
-dotnet run --project CTDB.CLI/CTDB.CLI.csproj -- upload test.cue
+ctdb-cli upload test.cue
 ```
