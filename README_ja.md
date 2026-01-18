@@ -5,7 +5,7 @@ CTDB (CUETools Database) と対話し、CUEシートと音声ファイルを用�
 ## 特徴
 1. CUE + WAV からの CTDB パリティ計算
 2. CTDBパリティデータを使用したエラー修復
-3. CTDB へのメタデータおよびパリティのアップロード
+3. CTDB へのメタデータおよびパリティの送信
 4. Linux (.NET 8.0) 環境での動作サポート
 
 ## セットアップ
@@ -92,10 +92,10 @@ ctdb-cli repair test.cue
 > **注意**: 修復にはCTDB上に十分なパリティデータが必要です。
 > 修復不可能な場合はエラーメッセージが表示されます。
 
-#### 5. Upload (アップロード)
+#### 5. Submit (送信)
 計算したパリティとメタデータをCTDBに送信します。
 **正しいデータであることの確度が高いときに限り実行してください。**
 ```bash
-ctdb-cli upload test.cue
+ctdb-cli submit test.cue
 ```
 

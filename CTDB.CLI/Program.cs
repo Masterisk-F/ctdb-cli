@@ -15,7 +15,7 @@ namespace CTDB.CLI
                 Console.WriteLine("  calc     - Calculate parity");
                 Console.WriteLine("  verify   - Verify against CTDB");
                 Console.WriteLine("  repair   - Repair using CTDB parity");
-                Console.WriteLine("  upload   - Upload parity");
+                Console.WriteLine("  submit   - Submit parity");
                 return;
             }
 
@@ -43,8 +43,8 @@ namespace CTDB.CLI
                     case "verify":
                         service.Verify(cuePath);
                         break;
-                    case "upload":
-                        service.Upload(cuePath);
+                    case "submit":
+                        service.Submit(cuePath);
                         break;
                     case "repair":
                         service.Repair(cuePath);

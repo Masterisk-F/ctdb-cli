@@ -230,9 +230,9 @@ namespace CTDB.CLI.Services
                 return true;
         }
 
-        public void Upload(string cuePath)
+        public void Submit(string cuePath)
         {
-            Console.WriteLine($"Uploading: {cuePath}");
+            Console.WriteLine($"Submitting: {cuePath}");
             try
             {
                 var cueSheet = new CUESheet(_config);
@@ -276,7 +276,7 @@ namespace CTDB.CLI.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error during upload: {ex.Message}");
+                Console.WriteLine($"Error during submit: {ex.Message}");
                 Console.WriteLine(ex.StackTrace);
             }
         }

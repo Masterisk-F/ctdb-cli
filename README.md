@@ -5,7 +5,7 @@ A Linux command-line tool that interacts with CTDB (CUETools Database) to perfor
 ## Features
 1. CTDB parity calculation from CUE + WAV
 2. Error repair using CTDB parity data
-3. Uploading metadata and parity to CTDB
+3. Submitting metadata and parity to CTDB
 4. Support for Linux (.NET 8.0) environment
 
 ## Setup
@@ -93,10 +93,10 @@ ctdb-cli repair test.cue
 > **Note**: Repair requires sufficient parity data in CTDB.
 > If repair is not possible, an error message will be displayed.
 
-#### 5. Upload
+#### 5. Submit
 Sends calculated parity and metadata to CTDB.
 **Please execute this only when you are highly confident that the data is correct.**
 ```bash
-ctdb-cli upload test.cue
+ctdb-cli submit test.cue
 ```
 
