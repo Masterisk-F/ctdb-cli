@@ -1,0 +1,24 @@
+
+# Standard .NET gitignore
+bin/
+obj/
+.idea/
+.vscode/
+*.user
+*.suo
+*.userprefs
+*.lock.json
+# OS specific
+.DS_Store
+Thumbs.db
+.dotnet/
+
+# Dependencies
+external/
+
+# Test files
+*.wav
+*.cue
+*.py
+
+*.wav

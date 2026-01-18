@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\external\cuetools.net\CUETools.Parity\CUETools.Parity.csproj" />
+    <ProjectReference Include="..\external\cuetools.net\CUETools.CTDB\CUETools.CTDB.csproj" />
+    <ProjectReference Include="..\external\cuetools.net\CUETools.Codecs\CUETools.Codecs.csproj" />
+    <ProjectReference Include="..\external\cuetools.net\CUETools.AccurateRip\CUETools.AccurateRip.csproj" />
+    <ProjectReference Include="..\external\cuetools.net\CUETools.CDImage\CUETools.CDImage.csproj" />
+    <ProjectReference Include="..\external\cuetools.net\CUETools.Processor\CUETools.Processor.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageReference Include="System.Drawing.Common" Version="10.0.2" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>

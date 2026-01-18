@@ -1,0 +1,11 @@
+--- external/cuetools.net/ThirdParty/taglib-sharp/src/TaglibSharp/TaglibSharp.csproj	2026-01-18 19:25:02.220686481 +0900
++++ /tmp/external_backup/cuetools.net/ThirdParty/taglib-sharp/src/TaglibSharp/TaglibSharp.csproj	2026-01-18 19:24:00.703766409 +0900
+@@ -1,6 +1,8 @@
+ <Project Sdk="Microsoft.NET.Sdk">
+ 
+   <PropertyGroup>
++    <ReleaseVersion>2.3.0.0</ReleaseVersion> <!-- From Directory.Build.props -->
++    <LibTargetFrameworks>net47;netstandard2.0</LibTargetFrameworks> <!-- From Directory.Build.props -->
+     <TargetFrameworks>$(LibTargetFrameworks)</TargetFrameworks>
+     <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\TaglibSharp.xml</DocumentationFile>
+     <AssemblyName>TagLibSharp</AssemblyName>
