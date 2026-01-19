@@ -53,12 +53,18 @@ dotnet publish CTDB.CLI/CTDB.CLI.csproj -c Release -r linux-x64 --self-contained
 `dotnet run` を使用するか、ビルド済みバイナリを使用します。
 
 ```bash
-ctdb-cli <command> <cue_file>
+ctdb-cli [options] <command> <cue_file> [command_options]
 ```
 
 ```bash
-dotnet run --project CTDB.CLI/CTDB.CLI.csproj -- <command> <cue_file>
+dotnet run --project CTDB.CLI/CTDB.CLI.csproj -- [options] <command> <cue_file> [command_options]
 ```
+
+### グローバルオプション
+
+| オプション | 説明 |
+|------------|------|
+| `--xml` | 実行結果を XML 形式で **標準出力 (stdout)** に出力します。ログやエラーは **標準エラー出力 (stderr)** に出力されます。([XML出力形式](./docs/xml_specification_ja.md)) |
 
 
 ### コマンド一覧

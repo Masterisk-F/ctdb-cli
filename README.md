@@ -54,12 +54,18 @@ dotnet publish CTDB.CLI/CTDB.CLI.csproj -c Release -r linux-x64 --self-contained
 Use `dotnet run` or the built binary.
 
 ```bash
-ctdb-cli <command> <cue_file>
+ctdb-cli [options] <command> <cue_file> [command_options]
 ```
 
 ```bash
-dotnet run --project CTDB.CLI/CTDB.CLI.csproj -- <command> <cue_file>
+dotnet run --project CTDB.CLI/CTDB.CLI.csproj -- [options] <command> <cue_file> [command_options]
 ```
+
+### Global Options
+
+| Option | Description |
+|--------|-------------|
+| `--xml` | Output results in XML format to **stdout**. Logs and errors are directed to **stderr**. ([XML Output Format](./docs/xml_specification.md))|
 
 
 ### Commands
