@@ -441,7 +441,6 @@ namespace CTDB.CLI.Services
                     repairableEntry.repair.Write(buffer);
                     audioDest.Write(buffer);
                     samplesWritten += buffer.Length;
-                    Console.Write(".");
                 }
 
                 repairableEntry.repair.Close();
