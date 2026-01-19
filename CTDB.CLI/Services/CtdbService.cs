@@ -86,7 +86,7 @@ namespace CTDB.CLI.Services
                 string? errorMessage;
                 if (!FeedAudioToAR(ar, cueSheet, cuePath, out errorMessage))
                 {
-                    return new CalcResult { Status = errorMessage };
+                    return new CalcResult { Status = "failure", Message = errorMessage };
                 }
 
                 var result = new CalcResult
@@ -116,7 +116,7 @@ namespace CTDB.CLI.Services
                 string msg = $"Error during calculation: {ex.Message}";
                 _logger.WriteLine(msg);
                 _logger.WriteLine(ex.StackTrace);
-                return new CalcResult { Status = msg };
+                return new CalcResult { Status = "failure", Message = msg };
             }
         }
 
@@ -138,7 +138,7 @@ namespace CTDB.CLI.Services
                 string? errorMessage;
                 if (!FeedAudioToAR(ar, cueSheet, cuePath, out errorMessage))
                 {
-                    return new VerifyResult { Status = errorMessage };
+                    return new VerifyResult { Status = "failure", Message = errorMessage };
                 }
 
                 _logger.WriteLine("Contacting CTDB...");
@@ -148,7 +148,8 @@ namespace CTDB.CLI.Services
                 {
                      string msg = $"CTDB returned {ctdb.QueryResponseStatus}";
                      _logger.WriteLine(msg);
-                     return new VerifyResult { Status = msg };
+                     string status = ctdb.QueryResponseStatus == HttpStatusCode.NotFound ? "not_found" : "failure";
+                     return new VerifyResult { Status = status, Message = msg };
                 }
 
                 _logger.WriteLine("Verifying...");
@@ -161,7 +162,7 @@ namespace CTDB.CLI.Services
                 var result = new VerifyResult
                 {
                     Toc = toc.TOCID,
-                    Status = ctdb.Status.ToString(),
+                    Status = (ctdb.Total > 0) ? "found" : "not_found",
                     Confidence = ctdb.Confidence,
                     TotalEntries = ctdb.Total,
                     Entries = new List<VerifyEntry>()
@@ -232,7 +233,7 @@ namespace CTDB.CLI.Services
                 string msg = $"Error during verification: {ex.Message}";
                 _logger.WriteLine(msg);
                 _logger.WriteLine(ex.StackTrace);
-                return new VerifyResult { Status = msg };
+                return new VerifyResult { Status = "failure", Message = msg };
             }
         }
 
@@ -336,7 +337,7 @@ namespace CTDB.CLI.Services
                 string? errorMessage;
                 if (!FeedAudioToAR(ar, cueSheet, cuePath, out errorMessage))
                 {
-                    return new SubmitResult { Status = errorMessage };
+                    return new SubmitResult { Status = "failure", Message = errorMessage };
                 }
 
                 // Get metadata
@@ -376,8 +377,8 @@ namespace CTDB.CLI.Services
                 {
                     _logger.WriteLine("[DRY-RUN] Would submit with above information.");
                     _logger.WriteLine("To actually submit, set CTDB_CLI_CALLER environment variable.");
-                    result.Status = "dry-run";
-                    result.Response = new SubmitResponse { Status = "dry-run", Message = "Dry-run mode" };
+                    result.Status = "dry_run";
+                    result.Response = new SubmitResponse { Status = "dry_run", Message = "Dry-run mode" };
                     return result;
                 }
 
@@ -389,7 +390,8 @@ namespace CTDB.CLI.Services
                 {
                     string msg = $"Cannot upload: CTDB access failed. {ctdb.DBStatus}";
                     _logger.WriteLine(msg);
-                    result.Status = msg;
+                    result.Status = "failure";
+                    result.Message = msg;
                     return result;
                 }
 
@@ -405,10 +407,10 @@ namespace CTDB.CLI.Services
                     _logger.WriteLine($"Parity Needed: {resp.ParityNeeded}");
                     _logger.WriteLine($"Raw SubStatus: {ctdb.SubStatus}");
 
-                    result.Status = resp.status;
+                    result.Status = "submitted";
                     result.Response = new SubmitResponse
                     {
-                        Status = resp.status,
+                        Status = "submitted",
                         Message = resp.message,
                         ParityNeeded = resp.ParityNeeded
                     };
@@ -417,7 +419,8 @@ namespace CTDB.CLI.Services
                 {
                     string msg = "Submit returned null.";
                     _logger.WriteLine(msg);
-                    result.Status = msg;
+                    result.Status = "failure";
+                    result.Message = msg;
                 }
                 return result;
             }
@@ -426,7 +429,7 @@ namespace CTDB.CLI.Services
                 string msg = $"Error during submit: {ex.Message}";
                 _logger.WriteLine(msg);
                 _logger.WriteLine(ex.StackTrace);
-                return new SubmitResult { Status = msg };
+                return new SubmitResult { Status = "failure", Message = msg };
             }
         }
 
@@ -451,7 +454,7 @@ namespace CTDB.CLI.Services
                 {
                     string msg = "Error: Audio file not found.";
                     _logger.WriteLine(msg);
-                    return new RepairResult { Status = msg };
+                    return new RepairResult { Status = "failure", Message = msg };
                 }
 
                 // Determine output file path and check if it already exists
@@ -465,13 +468,13 @@ namespace CTDB.CLI.Services
                     string msg = $"Error: Output file already exists: {outputPath}";
                     _logger.WriteLine(msg);
                     _logger.WriteLine("Please remove or rename the existing file and try again.");
-                    return new RepairResult { Status = msg };
+                    return new RepairResult { Status = "failure", Message = msg };
                 }
 
                 string? feedErrorMessage;
                 if (!FeedAudioToAR(ar, cueSheet, cuePath, out feedErrorMessage))
                 {
-                    return new RepairResult { Status = feedErrorMessage };
+                    return new RepairResult { Status = "failure", Message = feedErrorMessage };
                 }
 
                 _logger.WriteLine("Contacting CTDB...");
@@ -481,7 +484,8 @@ namespace CTDB.CLI.Services
                 {
                      string msg = $"CTDB returned {ctdb.QueryResponseStatus}";
                      _logger.WriteLine(msg);
-                     return new RepairResult { Status = msg };
+                     string status = ctdb.QueryResponseStatus == HttpStatusCode.NotFound ? "not_found" : "failure";
+                     return new RepairResult { Status = status, Message = msg };
                 }
 
                 _logger.WriteLine("Verifying...");
@@ -524,13 +528,13 @@ namespace CTDB.CLI.Services
                     if (!hasAnyErrors)
                     {
                         _logger.WriteLine("No errors detected. The file does not need repair.");
-                        result.Status = "no errors";
+                        result.Status = "clean";
                     }
                     else
                     {
                         _logger.WriteLine("Errors detected but cannot be recovered.");
                         _logger.WriteLine("The CTDB does not have sufficient parity data to repair this file.");
-                        result.Status = "not recoverable";
+                        result.Status = "unrecoverable";
                     }
                 }
                 else
@@ -588,6 +592,7 @@ namespace CTDB.CLI.Services
 
                 if (repairableEntry == null)
                 {
+                    // No repair needed or possible. Return the result after `verifyEntry` have been added to `result`.
                     return result;
                 }
 
@@ -598,6 +603,8 @@ namespace CTDB.CLI.Services
                 if (audioSource == null)
                 {
                     _logger.WriteLine("Error: Failed to open audio source for repair.");
+                    result.Status = "failure";
+                    result.Message = "Failed to open audio source for repair.";
                     return result;
                 }
 
@@ -626,7 +633,7 @@ namespace CTDB.CLI.Services
                 _logger.WriteLine($"Output: {outputPath}");
                 _logger.WriteLine($"Samples written: {samplesWritten}");
 
-                result.Status = "success";
+                result.Status = "repaired";
                 result.SamplesWritten = samplesWritten;
                 return result;
             }
@@ -635,7 +642,7 @@ namespace CTDB.CLI.Services
                 string msg = $"Error during repair: {ex.Message}";
                 _logger.WriteLine(msg);
                 _logger.WriteLine(ex.StackTrace);
-                return new RepairResult { Status = msg };
+                return new RepairResult { Status = "failure", Message = msg };
             }
         }
 

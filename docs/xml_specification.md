@@ -26,7 +26,8 @@ Outputs parity calculation results.
 
 **Structure:**
 - `calc_result`: Root of the calculation result
-    - `@status`: Status (`success` or an error message)
+    - `@status`: Status (`success` or `failure`)
+    - `@message`: Error message (only on `failure`)
     - `@toc_id`: TOC ID
     - `@ctdb_crc`: Disc-wide CRC (8-digit hexadecimal)
     - `track`: Information for each track
@@ -40,7 +41,8 @@ Outputs detailed verification results.
 **Structure:**
 - `verify_result`: Root of the verification result
     - `@toc`: Target TOC ID
-    - `@status`: Verification status (`success`, `no errors`, etc., or an error message)
+    - `@status`: Verification status (`found`, `not_found`, or `failure`)
+    - `@message`: Error message (only on `failure`)
     - `@confidence`: Overall confidence
     - `@total_entries`: Number of entries found in the DB
     - `entry`: Comparison results with each DB entry
@@ -48,7 +50,7 @@ Outputs detailed verification results.
         - `@conf`: Confidence of that entry
         - `@crc`: CRC of that entry
         - `@offset`: Offset
-        - `@status`: Verification status for that entry
+        - `@status`: Verification status for that entry (string from CUETools)
         - `@has_errors`: Whether errors exist
         - `@can_recover`: Whether it's recoverable
         - `track`: Comparison results for each track
@@ -65,11 +67,12 @@ Outputs submission content and results.
 
 **Structure:**
 - `submit_result`: Root of the submission result
-    - `@status`: Overall status (e.g., `success`, `parity needed`, `dry-run`, or an error message)
+    - `@status`: Overall status (`submitted`, `dry_run`, or `failure`)
+    - `@message`: Detailed message (e.g., error details or dry-run notice)
     - `submitted_metadata`: Metadata that was submitted
         - `@artist`, `@title`, `@barcode`, `@drive`, `@quality`
-    - `response`: Parsed response from the API (Not output if an error occurs before API connection)
-        - `@status`: Submission status (e.g., success, parity needed, error)
+    - `response`: Parsed response from the API
+        - `@status`: Submission status (`submitted`, `dry_run`, or `failure`)
         - `@message`: Message
         - `@parity_needed`: Whether parity file upload is required
     - `raw_response`: Raw XML response from the CTDB `submit2.php` endpoint (if available)
@@ -79,7 +82,8 @@ Outputs the results of the repair process.
 
 **Structure:**
 - `repair_result`: Root of the repair result
-    - `@status`: Status (e.g., `success`, `no errors`, `not recoverable`, or an error message)
+    - `@status`: Status (`repaired`, `clean`, `unrecoverable`, or `failure`)
+    - `@message`: Detailed message (e.g., error details)
     - `@output_path`: Output file path
     - `@samples_written`: Number of samples written
     - `entry`: List of DB entries. Same structure as `verify_result`-`entry`, but with the following element added:

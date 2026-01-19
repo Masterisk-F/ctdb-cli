@@ -37,6 +37,9 @@ namespace CTDB.CLI.Models
         [XmlAttribute("status")]
         public string? Status { get; set; }
 
+        [XmlAttribute("message")]
+        public string? Message { get; set; }
+
         [XmlAttribute("confidence")]
         public int Confidence { get; set; }
 
@@ -109,6 +112,9 @@ namespace CTDB.CLI.Models
         [XmlAttribute("status")]
         public string? Status { get; set; }
 
+        [XmlAttribute("message")]
+        public string? Message { get; set; }
+
         [XmlElement("submitted_metadata")]
         public SubmittedMetadata? Metadata { get; set; }
 
@@ -154,6 +160,9 @@ namespace CTDB.CLI.Models
         [XmlAttribute("status")]
         public string? Status { get; set; }
 
+        [XmlAttribute("message")]
+        public string? Message { get; set; }
+
         [XmlAttribute("output_path")]
         public string? OutputPath { get; set; }
 
@@ -168,6 +177,9 @@ namespace CTDB.CLI.Models
     {
         [XmlAttribute("status")]
         public string? Status { get; set; }
+
+        [XmlAttribute("message")]
+        public string? Message { get; set; }
 
         [XmlAttribute("toc_id")]
         public string? TocId { get; set; }
