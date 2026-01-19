@@ -6,6 +6,7 @@
 - **文字コード**: UTF-8
 - **出力**: 標準出力（stdout）にXMLデータが出力されます。進行状況やエラーログは標準エラー出力（stderr）に出力されます。
 - **名前空間**: ルート要素 `ctdb` は `http://db.cuetools.net/ns/mmd-1.0#` に属します。
+- **エラーハンドリング**: 命令の実行中にエラーが発生した場合でも `null` は返されず、各コマンドの結果要素（`verify_result` など）の `status` 属性にエラー内容が含まれた状態で XML が出力されます。
 
 ## 1. lookup コマンド
 CTDB `lookup2.php`エンドポイントから返されたXMLをそのまま出力します。
@@ -25,6 +26,7 @@ CTDB `lookup2.php`エンドポイントから返されたXMLをそのまま出�
 
 **構造:**
 - `calc_result`: 計算結果のルート
+    - `@status`: ステータス (`success` またはエラーメッセージ)
     - `@toc_id`: TOC ID
     - `@ctdb_crc`: ディスク全体のCRC (8桁16進数)
     - `track`: 各トラックの情報
@@ -38,7 +40,7 @@ CTDB `lookup2.php`エンドポイントから返されたXMLをそのまま出�
 **構造:**
 - `verify_result`: 検証結果のルート
     - `@toc`: 対象のTOC ID
-    - `@status`: 検証ステータス
+    - `@status`: 検証ステータス (`success`, `no errors` など、またはエラーメッセージ)
     - `@confidence`: 全体の信頼度
     - `@total_entries`: DBから見つかったエントリ数
     - `entry`: 各DBエントリとの比較結果
@@ -63,20 +65,21 @@ CTDB `lookup2.php`エンドポイントから返されたXMLをそのまま出�
 
 **構造:**
 - `submit_result`: 送信結果のルート
+    - `@status`: 全体のステータス（成功した場合は `success` や `parity needed`、ドライラン時は `dry-run`、エラー時はエラーメッセージ）
     - `submitted_metadata`: 送信したメタデータ
         - `@artist`, `@title`, `@barcode`, `@drive`, `@quality`
-    - `response`: APIからのレスポンス（パース済み）
+    - `response`: APIからのレスポンス（パース済み。API接続前にエラーが発生した場合は出力されません）
         - `@status`: 送信ステータス (success, parity needed, error など)
         - `@message`: メッセージ
         - `@parity_needed`: パリティファイルのアップロードが必要か
-    - `raw_response`: CTDB `submit2.php`エンドポイントからの生のXMLレスポンス（取得可能な場合）
+    - `raw_response`: CTDB `submit2.php`エンドポイントからの生のXMLレスポンス（取得可能な場合のみ）
 
 ## 5. repair コマンド
 修復処理の結果を出力します。
 
 **構造:**
 - `repair_result`: 修復結果のルート
-    - `@status`: ステータス (success, no errors, not recoverable など)
+    - `@status`: ステータス (`success`, `no errors`, `not recoverable` など、またはエラーメッセージ)
     - `@output_path`: 出力ファイルパス
     - `@samples_written`: 書き込まれたサンプル数
     - `entry`: DBエントリのリスト。`verify_result`-`entry`と同様の構造だが以下の要素が追加される

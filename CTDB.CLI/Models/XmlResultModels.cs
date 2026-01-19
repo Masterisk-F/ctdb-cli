@@ -106,6 +106,9 @@ namespace CTDB.CLI.Models
 
     public class SubmitResult
     {
+        [XmlAttribute("status")]
+        public string? Status { get; set; }
+
         [XmlElement("submitted_metadata")]
         public SubmittedMetadata? Metadata { get; set; }
 
@@ -163,6 +166,9 @@ namespace CTDB.CLI.Models
 
     public class CalcResult
     {
+        [XmlAttribute("status")]
+        public string? Status { get; set; }
+
         [XmlAttribute("toc_id")]
         public string? TocId { get; set; }
 
