@@ -68,14 +68,14 @@ Outputs submission content and results.
 **Structure:**
 - `submit_result`: Root of the submission result
     - `@status`: Overall status (`submitted`, `dry_run`, or `failure`)
-    - `@message`: Detailed message (e.g., error details or dry-run notice)
+    - `@message`: Error message (only on `failure`)
     - `submitted_metadata`: Metadata that was submitted
         - `@artist`, `@title`, `@barcode`, `@drive`, `@quality`
     - `response`: Parsed response from the API
         - `@status`: Submission status (`submitted`, `dry_run`, or `failure`)
         - `@message`: Message
         - `@parity_needed`: Whether parity file upload is required
-    - `raw_response`: Raw XML response from the CTDB `submit2.php` endpoint (if available)
+    - `raw_response`: Re-serialized XML from the CTDB `submit2.php` response (may not exactly match the original response)
 
 ## 5. repair command
 Outputs the results of the repair process.
@@ -83,7 +83,7 @@ Outputs the results of the repair process.
 **Structure:**
 - `repair_result`: Root of the repair result
     - `@status`: Status (`repaired`, `clean`, `unrecoverable`, or `failure`)
-    - `@message`: Detailed message (e.g., error details)
+    - `@message`: Error message (only on `failure`)
     - `@output_path`: Output file path
     - `@samples_written`: Number of samples written
     - `entry`: List of DB entries. Same structure as `verify_result`-`entry`, but with the following element added:

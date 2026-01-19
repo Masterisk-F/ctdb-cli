@@ -7,6 +7,7 @@ using CUETools.AccurateRip;
 using CUETools.Codecs;
 using System.Net;
 using System.IO;
+using System.Xml.Serialization;
 using CTDB.CLI.Models;
 
 namespace CTDB.CLI.Services
@@ -414,6 +415,14 @@ namespace CTDB.CLI.Services
                         Message = resp.message,
                         ParityNeeded = resp.ParityNeeded
                     };
+
+                    // Reserialize CTDBResponse and set to RawResponse
+                    var rawSerializer = new XmlSerializer(typeof(CUETools.CTDB.CTDBResponse));
+                    using (var sw = new StringWriter())
+                    {
+                        rawSerializer.Serialize(sw, resp);
+                        result.RawResponse = sw.ToString();
+                    }
                 }
                 else
                 {
