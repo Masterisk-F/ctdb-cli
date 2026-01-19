@@ -635,6 +635,7 @@ namespace CTDB.CLI.Services
 
                 result.Status = "repaired";
                 result.SamplesWritten = samplesWritten;
+                result.OutputPath = outputPath;
                 return result;
             }
             catch (Exception ex)
