@@ -216,7 +216,6 @@ namespace CTDB.CLI.Services
                     if (buffer.Length > 0)
                         ar.Write(buffer);
 
-                    Console.Write(".");
                     if (ar.Position >= ar.FinalSampleCount) break;
                 }
 
@@ -231,7 +230,7 @@ namespace CTDB.CLI.Services
                         ar.Write(buffer);
                     }
                 }
-                Console.WriteLine($"\nDone. Final Position: {ar.Position}, Expected: {ar.FinalSampleCount}");
+                Console.WriteLine($"Done. Final Position: {ar.Position}, Expected: {ar.FinalSampleCount}");
                 return true;
         }
 
