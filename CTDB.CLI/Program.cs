@@ -12,9 +12,19 @@ namespace CTDB.CLI
     {
         static void Main(string[] args)
         {
-            if (args.Length < 2)
+            // Extract global options first
+            bool useXml = args.Contains("--xml", StringComparer.OrdinalIgnoreCase);
+            
+            // Create a list of arguments excluding global options
+            var remainingArgs = args.Where(a => !a.Equals("--xml", StringComparison.OrdinalIgnoreCase)).ToArray();
+
+            if (remainingArgs.Length < 2)
             {
-                Console.WriteLine("Usage: ctdb-cli <command> <cue_file> [options]");
+                Console.WriteLine("Usage: ctdb-cli [options] <command> <cue_file> [command_options]");
+                Console.WriteLine("");
+                Console.WriteLine("Global Options:");
+                Console.WriteLine("  --xml    - Output result in XML format to stdout (logs go to stderr)");
+                Console.WriteLine("");
                 Console.WriteLine("Commands:");
                 Console.WriteLine("  lookup   - Lookup metadata from CTDB");
                 Console.WriteLine("  calc     - Calculate parity");
@@ -23,15 +33,11 @@ namespace CTDB.CLI
                 Console.WriteLine("  submit   - Submit parity to CTDB");
                 Console.WriteLine("             Required: --drive <name> --quality <1-100>");
                 Console.WriteLine("             Note: Set CTDB_CLI_CALLER env var to enable actual submission.");
-                Console.WriteLine("");
-                Console.WriteLine("Options:");
-                Console.WriteLine("  --xml    - Output result in XML format to stdout (logs go to stderr)");
                 return;
             }
 
-            string command = args[0];
-            string cuePath = args[1];
-            bool useXml = args.Contains("--xml", StringComparer.OrdinalIgnoreCase);
+            string command = remainingArgs[0];
+            string cuePath = remainingArgs[1];
 
             if (!File.Exists(cuePath))
             {
@@ -67,8 +73,8 @@ namespace CTDB.CLI
                         break;
                     case "submit":
                         {
-                            string? drive = GetArgValue(args, "--drive");
-                            string? qualityStr = GetArgValue(args, "--quality");
+                            string? drive = GetArgValue(remainingArgs, "--drive");
+                            string? qualityStr = GetArgValue(remainingArgs, "--quality");
 
                             if (string.IsNullOrEmpty(drive) || string.IsNullOrEmpty(qualityStr))
                             {
