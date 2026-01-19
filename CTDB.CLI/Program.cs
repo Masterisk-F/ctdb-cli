@@ -1,5 +1,10 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
+using System.Collections.Generic;
+using System.Xml.Serialization;
+using System.Xml;
+using CTDB.CLI.Models;
 
 namespace CTDB.CLI
 {
@@ -18,32 +23,47 @@ namespace CTDB.CLI
                 Console.WriteLine("  submit   - Submit parity to CTDB");
                 Console.WriteLine("             Required: --drive <name> --quality <1-100>");
                 Console.WriteLine("             Note: Set CTDB_CLI_CALLER env var to enable actual submission.");
+                Console.WriteLine("");
+                Console.WriteLine("Options:");
+                Console.WriteLine("  --xml    - Output result in XML format to stdout (logs go to stderr)");
                 return;
             }
 
             string command = args[0];
             string cuePath = args[1];
+            bool useXml = args.Contains("--xml", StringComparer.OrdinalIgnoreCase);
 
             if (!File.Exists(cuePath))
             {
-                Console.WriteLine($"Error: CUE file not found: {cuePath}");
+                var writer = useXml ? Console.Error : Console.Out;
+                writer.WriteLine($"Error: CUE file not found: {cuePath}");
                 return;
             }
 
             try
             {
-                var service = new Services.CtdbService();
+                var service = new Services.CtdbService(useXml ? Console.Error : Console.Out);
+                CtdbXmlResult finalResult = new CtdbXmlResult();
+                object? commandResult = null;
 
                 switch (command.ToLower())
                 {
                     case "lookup":
-                        service.Lookup(cuePath);
+                        finalResult.Lookup = service.Lookup(cuePath);
+                        commandResult = finalResult.Lookup;
+                        if (useXml && finalResult.Lookup != null)
+                        {
+                            Console.WriteLine(finalResult.Lookup.RawXml);
+                            return;
+                        }
                         break;
                     case "calc":
-                        service.CalculateParity(cuePath);
+                        finalResult.Calc = service.CalculateParity(cuePath);
+                        commandResult = finalResult.Calc;
                         break;
                     case "verify":
-                        service.Verify(cuePath);
+                        finalResult.Verify = service.Verify(cuePath);
+                        commandResult = finalResult.Verify;
                         break;
                     case "submit":
                         {
@@ -52,33 +72,67 @@ namespace CTDB.CLI
 
                             if (string.IsNullOrEmpty(drive) || string.IsNullOrEmpty(qualityStr))
                             {
-                                Console.WriteLine("Error: --drive and --quality are required for submit.");
-                                Console.WriteLine("Usage: ctdb-cli submit <cue_file> --drive <name> --quality <1-100>");
+                                var writer = useXml ? Console.Error : Console.Out;
+                                writer.WriteLine("Error: --drive and --quality are required for submit.");
+                                writer.WriteLine("Usage: ctdb-cli submit <cue_file> --drive <name> --quality <1-100>");
                                 return;
                             }
 
                             if (!int.TryParse(qualityStr, out int quality) || quality < 1 || quality > 100)
                             {
-                                Console.WriteLine("Error: --quality must be an integer between 1 and 100.");
+                                var writer = useXml ? Console.Error : Console.Out;
+                                writer.WriteLine("Error: --quality must be an integer between 1 and 100.");
                                 return;
                             }
 
-                            service.Submit(cuePath, drive, quality);
+                            finalResult.Submit = service.Submit(cuePath, drive, quality);
+                            commandResult = finalResult.Submit;
                         }
                         break;
                     case "repair":
-                        service.Repair(cuePath);
+                        finalResult.Repair = service.Repair(cuePath);
+                        commandResult = finalResult.Repair;
                         break;
                     default:
-                        Console.WriteLine($"Unknown command: {command}");
+                        Console.Error.WriteLine($"Unknown command: {command}");
+                        Environment.Exit(1);
                         break;
+                }
+
+                if (useXml)
+                {
+                    OutputXml(finalResult);
+                }
+                
+                if (commandResult == null)
+                {
+                    Environment.Exit(1);
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"An error occurred: {ex.Message}");
-                Console.WriteLine(ex.StackTrace);
+                var writer = useXml ? Console.Error : Console.Out;
+                writer.WriteLine($"An error occurred: {ex.Message}");
+                writer.WriteLine(ex.StackTrace);
+                Environment.Exit(1);
             }
+        }
+
+
+        static void OutputXml(CtdbXmlResult result)
+        {
+            var serializer = new XmlSerializer(typeof(CtdbXmlResult));
+            var settings = new XmlWriterSettings
+            {
+                Indent = true,
+                OmitXmlDeclaration = false
+            };
+
+            using (var writer = XmlWriter.Create(Console.Out, settings))
+            {
+                serializer.Serialize(writer, result);
+            }
+            Console.WriteLine(); // Add newline after XML
         }
 
         // Helper method to get the value of a specified key from arguments
