@@ -102,10 +102,11 @@ ctdb-cli submit test.cue --drive "Drive Name" --quality 100
 
 | 引数 | 必須 | 説明 |
 |------|------|------|
-| `--drive` | ✓ | ドライブ名 (例: "PLEXTOR PX-716A") |
-| `--quality` | ✓ | 品質 (1-100) |
+| `--drive` | ○ | ドライブ名 (例: "PLEXTOR PX-716A") |
+| `--quality` | ○ | 品質 (1-100) |
 
 > **ドライブ名の確認方法**
+> 
 > `cd-info` コマンド (libcdio) で取得できます。
 > 
 > ```bash
@@ -115,8 +116,11 @@ ctdb-cli submit test.cue --drive "Drive Name" --quality 100
 > Model                       : DVD RW AD-7290H 
 > ...
 > ```
-> この場合`--drive "Optiarc DVD RW AD-7290H"` と指定できます。
-
+> この場合`--drive "Optiarc - DVD RW AD-7290H"` と指定できます。
+> 
+> [ソース](https://github.com/gchudov/db.cue.tools/blob/master/utils/docker/ctdbweb/db.cue.tools/submit2.php)によれば、
+> ドライブ名が受領されるためには、文字列の先頭が登録されたベンダー名（おそらく PIONEER, ASUS, HL-DT-ST など）で始まり、
+> その後に任意の文字が続き、かつどこかにハイフン (`-`) が含まれている必要があります。
 
 デフォルトでは送信内容を表示するだけの **dry-run** モードで動作します。
 実際に送信を行うには、環境変数 `CTDB_CLI_CALLER` に呼び出し元のアプリケーション名を設定してください。

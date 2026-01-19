@@ -103,10 +103,11 @@ ctdb-cli submit test.cue --drive "Drive Name" --quality 100
 
 | Argument | Required | Description |
 |----------|----------|-------------|
-| `--drive` | ✓ | Drive name (e.g., "PLEXTOR PX-716A") |
-| `--quality` | ✓ | Quality (1-100) |
+| `--drive` | ○ | Drive name (e.g., "PLEXTOR PX-716A") |
+| `--quality` | ○ | Quality (1-100) |
 
 > **How to find the drive name**
+> 
 > You can obtain it using the `cd-info` command (libcdio).
 > 
 > ```bash
@@ -116,7 +117,10 @@ ctdb-cli submit test.cue --drive "Drive Name" --quality 100
 > Model                       : DVD RW AD-7290H 
 > ...
 > ```
-> In this case, you can specify it as `--drive "Optiarc DVD RW AD-7290H"`.
+> In this case, you can specify it as `--drive "Optiarc - DVD RW AD-7290H"`.
+> 
+> According to the [source](https://github.com/gchudov/db.cue.tools/blob/master/utils/docker/ctdbweb/db.cue.tools/submit2.php),
+> for a drive name to be accepted, the submitted string must start with a registered vendor name (probably something like PIONEER, ASUS, HL-DT-ST), be followed by any characters, and contain a hyphen (`-`) somewhere.
 
 
 By default, it operates in **dry-run** mode, which only displays the information to be submitted.
