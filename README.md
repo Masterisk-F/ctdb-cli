@@ -3,7 +3,7 @@
 A Linux command-line tool that interacts with CTDB (CUETools Database) to perform metadata retrieval, parity calculation, verification, repair, and uploading using CUE sheets and audio files.
 
 ## Features
-1. CTDB parity calculation from CUE + WAV
+1. CTDB parity calculation from CUE + WAV/FLAC
 2. Error repair using CTDB parity data
 3. Submitting metadata and parity to CTDB
 4. Support for Linux (.NET 8.0) environment
