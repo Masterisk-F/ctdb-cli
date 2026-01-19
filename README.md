@@ -93,9 +93,36 @@ ctdb-cli repair test.cue
 > If repair is not possible, an error message will be displayed.
 
 #### 5. Submit
-Sends calculated parity and metadata to CTDB.
-**Please execute this only when you are highly confident that the data is correct.**
+Submits the calculated parity and metadata to CTDB.
+
+**Only execute this command if you are highly confident that the data is correct.**
+
 ```bash
-ctdb-cli submit test.cue
+ctdb-cli submit test.cue --drive "Drive Name" --quality 100
+```
+
+| Argument | Required | Description |
+|----------|----------|-------------|
+| `--drive` | ✓ | Drive name (e.g., "PLEXTOR PX-716A") |
+| `--quality` | ✓ | Quality (1-100) |
+
+> **How to find the drive name**
+> You can obtain it using the `cd-info` command (libcdio).
+> 
+> ```bash
+> $ cd-info -A --no-cddb
+> ...
+> Vendor                      : Optiarc 
+> Model                       : DVD RW AD-7290H 
+> ...
+> ```
+> In this case, you can specify it as `--drive "Optiarc DVD RW AD-7290H"`.
+
+
+By default, it operates in **dry-run** mode, which only displays the information to be submitted.
+To perform the actual submission, set the `CTDB_CLI_CALLER` environment variable to identify your application name.
+
+```bash
+env CTDB_CLI_CALLER="your-app-name" ctdb-cli submit test.cue --drive "drive name" --quality 100
 ```
 

@@ -93,8 +93,35 @@ ctdb-cli repair test.cue
 
 #### 5. Submit (送信)
 計算したパリティとメタデータをCTDBに送信します。
+
 **正しいデータであることの確度が高いときに限り実行してください。**
+
 ```bash
-ctdb-cli submit test.cue
+ctdb-cli submit test.cue --drive "Drive Name" --quality 100
+```
+
+| 引数 | 必須 | 説明 |
+|------|------|------|
+| `--drive` | ✓ | ドライブ名 (例: "PLEXTOR PX-716A") |
+| `--quality` | ✓ | 品質 (1-100) |
+
+> **ドライブ名の確認方法**
+> `cd-info` コマンド (libcdio) で取得できます。
+> 
+> ```bash
+> $ cd-info -A --no-cddb
+> ...
+> Vendor                      : Optiarc 
+> Model                       : DVD RW AD-7290H 
+> ...
+> ```
+> この場合`--drive "Optiarc DVD RW AD-7290H"` と指定できます。
+
+
+デフォルトでは送信内容を表示するだけの **dry-run** モードで動作します。
+実際に送信を行うには、環境変数 `CTDB_CLI_CALLER` に呼び出し元のアプリケーション名を設定してください。
+
+```bash
+env CTDB_CLI_CALLER="your-app-name" ctdb-cli submit test.cue --drive "drive name" --quality 100
 ```
 

@@ -235,9 +235,19 @@ namespace CTDB.CLI.Services
                 return true;
         }
 
-        public void Submit(string cuePath)
+        public void Submit(string cuePath, string driveName, int quality)
         {
             Console.WriteLine($"Submitting: {cuePath}");
+            
+            // Dry-run control via CTDB_CLI_CALLER environment variable
+            string? caller = Environment.GetEnvironmentVariable("CTDB_CLI_CALLER");
+            bool isDryRun = string.IsNullOrEmpty(caller);
+            
+            if (isDryRun)
+            {
+                Console.WriteLine("[DRY-RUN MODE] CTDB_CLI_CALLER environment variable is not set.");
+            }
+            
             try
             {
                 var cueSheet = new CUESheet(_config);
@@ -252,8 +262,36 @@ namespace CTDB.CLI.Services
 
                 if (!FeedAudioToAR(ar, cueSheet, cuePath)) return;
 
+                // Get metadata
+                string artist = string.IsNullOrEmpty(cueSheet.Metadata.Artist) ? string.Empty : cueSheet.Metadata.Artist;
+                string title = string.IsNullOrEmpty(cueSheet.Metadata.Title) ? string.Empty : cueSheet.Metadata.Title;
+                string barcode = string.IsNullOrEmpty(cueSheet.Metadata.Barcode) ? string.Empty : cueSheet.Metadata.Barcode;
+                
+                // Construct userAgent
+                string userAgent = isDryRun ? "ctdb-cli(dry-run)" : $"ctdb-cli({caller})";
+                
+                // Display submission information
+                Console.WriteLine("------------------------------------------------------------");
+                Console.WriteLine("Submit Information:");
+                Console.WriteLine($"  TOC ID     :{toc.TOCID}");
+                Console.WriteLine($"  Confidence :1 (fixed)");
+                Console.WriteLine($"  Quality    :{quality}");
+                Console.WriteLine($"  Artist     :{(string.IsNullOrEmpty(artist) ? "(empty)" : artist)}");
+                Console.WriteLine($"  Title      :{(string.IsNullOrEmpty(title) ? "(empty)" : title)}");
+                Console.WriteLine($"  Barcode    :{(string.IsNullOrEmpty(barcode) ? "(empty)" : barcode)}");
+                Console.WriteLine($"  Drive      :{driveName}");
+                Console.WriteLine($"  UserAgent  :{userAgent}");
+                Console.WriteLine("------------------------------------------------------------");
+                
+                if (isDryRun)
+                {
+                    Console.WriteLine("[DRY-RUN] Would submit with above information.");
+                    Console.WriteLine("To actually submit, set CTDB_CLI_CALLER environment variable.");
+                    return;
+                }
+
                 Console.WriteLine("Contacting CTDB...");
-                ctdb.ContactDB(null, "ctdb-cli", null, true, false, CTDBMetadataSearch.Default);
+                ctdb.ContactDB(null, userAgent, driveName, true, false, CTDBMetadataSearch.Default);
 
                 if (ctdb.QueryExceptionStatus != WebExceptionStatus.Success && 
                     (ctdb.QueryExceptionStatus != WebExceptionStatus.ProtocolError || ctdb.QueryResponseStatus != HttpStatusCode.NotFound))
@@ -262,14 +300,10 @@ namespace CTDB.CLI.Services
                     return;
                 }
 
-                string artist = string.IsNullOrEmpty(cueSheet.Metadata.Artist) ? string.Empty : cueSheet.Metadata.Artist;
-                string title = string.IsNullOrEmpty(cueSheet.Metadata.Title) ? string.Empty : cueSheet.Metadata.Title;
-                
-                Console.WriteLine($"Artist: {(string.IsNullOrEmpty(cueSheet.Metadata.Artist) ? "Unknown" : cueSheet.Metadata.Artist)}");
-                Console.WriteLine($"Title: {(string.IsNullOrEmpty(cueSheet.Metadata.Title) ? "Unknown" : cueSheet.Metadata.Title)}");
                 Console.WriteLine("Submitting...");
                 
-                var resp = ctdb.Submit(1, 100, artist, title, "");
+                // confidence is fixed at 1
+                var resp = ctdb.Submit(1, quality, artist, title, barcode);
                 
                 if (resp != null)
                 {
