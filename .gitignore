@@ -22,6 +22,10 @@ publish/
 
 # Test files
 *.wav
+
+# Temporary analysis and server files
+temp_server_analysis/
+temp_srv/
 *.cue
 *.py
 
