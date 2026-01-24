@@ -397,6 +397,10 @@ namespace CTDB.CLI.Services
                     return result;
                 }
 
+                // verify required before submit 
+                _logger.WriteLine("Verifying...");
+                ctdb.DoVerify();
+
                 _logger.WriteLine("Submitting...");
 
                 // confidence is fixed at 1
