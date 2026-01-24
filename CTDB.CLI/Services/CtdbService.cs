@@ -49,13 +49,13 @@ namespace CTDB.CLI.Services
                     + "&fuzzy=1"
                     + "&metadata=default"
                     + "&toc=" + toc.ToString();
-                
+
                 _logger.WriteLine($"Fetching XML from: {url}");
-                
+
                 var request = (HttpWebRequest)WebRequest.Create(url);
                 request.Proxy = _config.GetProxy();
                 request.UserAgent = "ctdb-cli (" + Environment.OSVersion.VersionString + ")";
-                
+
                 using (var response = (HttpWebResponse)request.GetResponse())
                 using (var stream = response.GetResponseStream())
                 using (var reader = new StreamReader(stream))
@@ -147,19 +147,19 @@ namespace CTDB.CLI.Services
 
                 if (ctdb.Metadata == null && ctdb.Entries == null)
                 {
-                     string msg = $"CTDB returned {ctdb.QueryResponseStatus}";
-                     _logger.WriteLine(msg);
-                     string status = ctdb.QueryResponseStatus == HttpStatusCode.NotFound ? "not_found" : "failure";
-                     return new VerifyResult { Status = status, Message = msg };
+                    string msg = $"CTDB returned {ctdb.QueryResponseStatus}";
+                    _logger.WriteLine(msg);
+                    string status = ctdb.QueryResponseStatus == HttpStatusCode.NotFound ? "not_found" : "failure";
+                    return new VerifyResult { Status = status, Message = msg };
                 }
 
                 _logger.WriteLine("Verifying...");
                 ctdb.DoVerify();
-                
+
                 _logger.WriteLine($"Confidence: {ctdb.Confidence}");
                 _logger.WriteLine($"Status: {ctdb.Status}");
                 _logger.WriteLine($"Total Entries: {ctdb.Total}");
-                
+
                 var result = new VerifyResult
                 {
                     Toc = toc.TOCID,
@@ -170,7 +170,7 @@ namespace CTDB.CLI.Services
                 };
 
                 int entryIndex = 0;
-                foreach(var entry in ctdb.Entries)
+                foreach (var entry in ctdb.Entries)
                 {
                     entryIndex++;
                     _logger.WriteLine($"------------------------------------------------------------");
@@ -201,7 +201,7 @@ namespace CTDB.CLI.Services
                             uint remoteCrc = entry.trackcrcs[i];
                             bool matched = (localCrc == remoteCrc);
                             string matchStatus = matched ? "Matched" : "Unmatched";
-                            
+
                             var trackResult = new TrackVerifyResult
                             {
                                 Number = i + 1,
@@ -240,89 +240,90 @@ namespace CTDB.CLI.Services
 
         private bool FeedAudioToAR(AccurateRipVerify ar, CUESheet cueSheet, string cuePath, out string? errorMessage)
         {
-                errorMessage = null;
-                // Find audio file
-                string audioPath = null;
-                var lines = File.ReadAllLines(cuePath);
-                foreach(var line in lines)
+            errorMessage = null;
+            // Find audio file
+            string audioPath = null;
+            var lines = File.ReadAllLines(cuePath);
+            foreach (var line in lines)
+            {
+                if (line.Trim().StartsWith("FILE"))
                 {
-                    if (line.Trim().StartsWith("FILE"))
+                    var parts = line.Trim().Split('\"');
+                    if (parts.Length >= 2)
                     {
-                        var parts = line.Trim().Split('\"');
-                        if (parts.Length >= 2)
-                        {
-                            audioPath = Path.Combine(Path.GetDirectoryName(cuePath), parts[1]);
-                            break; 
-                        }
+                        audioPath = Path.Combine(Path.GetDirectoryName(cuePath), parts[1]);
+                        break;
                     }
                 }
-                
-                if (audioPath == null || !File.Exists(audioPath))
+            }
+
+            if (audioPath == null || !File.Exists(audioPath))
+            {
+                // Fallback to checking same name as CUE
+                var altPath = Path.ChangeExtension(cuePath, ".wav");
+                if (File.Exists(altPath)) audioPath = altPath;
+            }
+
+            if (audioPath == null || !File.Exists(audioPath))
+            {
+                errorMessage = "Audio file not found.";
+                _logger.WriteLine(errorMessage);
+                return false;
+            }
+
+            _logger.WriteLine($"Processing audio file: {audioPath}");
+
+            var audioSource = AudioReadWrite.GetAudioSource(audioPath, null, _config);
+            if (audioSource == null)
+            {
+                errorMessage = "Failed to open audio source.";
+                _logger.WriteLine(errorMessage);
+                return false;
+            }
+
+            var buffer = new AudioBuffer(audioSource, 1024 * 64);
+
+            while (audioSource.Read(buffer, -1) != 0)
+            {
+                if (ar.Position + buffer.Length > ar.FinalSampleCount)
                 {
-                     // Fallback to checking same name as CUE
-                     var altPath = Path.ChangeExtension(cuePath, ".wav");
-                     if (File.Exists(altPath)) audioPath = altPath;
+                    buffer.Length = (int)(ar.FinalSampleCount - ar.Position);
                 }
 
-                if (audioPath == null || !File.Exists(audioPath))
+                if (buffer.Length > 0)
+                    ar.Write(buffer);
+
+                if (ar.Position >= ar.FinalSampleCount) break;
+            }
+
+            if (ar.Position < ar.FinalSampleCount)
+            {
+                _logger.WriteLine($"\nWarning: Audio file shorter than TOC. Padding {ar.FinalSampleCount - ar.Position} samples.");
+                Array.Clear(buffer.Bytes, 0, buffer.Bytes.Length);
+                while (ar.Position < ar.FinalSampleCount)
                 {
-                    errorMessage = "Audio file not found.";
-                    _logger.WriteLine(errorMessage);
-                    return false;
+                    int remaining = (int)Math.Min(buffer.Bytes.Length / buffer.PCM.BlockAlign, ar.FinalSampleCount - ar.Position);
+                    buffer.Length = remaining;
+                    ar.Write(buffer);
                 }
-
-                _logger.WriteLine($"Processing audio file: {audioPath}");
-                
-                var audioSource = AudioReadWrite.GetAudioSource(audioPath, null, _config);
-                if (audioSource == null) {
-                    errorMessage = "Failed to open audio source.";
-                    _logger.WriteLine(errorMessage);
-                    return false;
-                }
-
-                var buffer = new AudioBuffer(audioSource, 1024 * 64); 
-                
-                while (audioSource.Read(buffer, -1) != 0)
-                {
-                    if (ar.Position + buffer.Length > ar.FinalSampleCount)
-                    {
-                        buffer.Length = (int)(ar.FinalSampleCount - ar.Position);
-                    }
-
-                    if (buffer.Length > 0)
-                        ar.Write(buffer);
-
-                    if (ar.Position >= ar.FinalSampleCount) break;
-                }
-
-                if (ar.Position < ar.FinalSampleCount)
-                {
-                    _logger.WriteLine($"\nWarning: Audio file shorter than TOC. Padding {ar.FinalSampleCount - ar.Position} samples.");
-                    Array.Clear(buffer.Bytes, 0, buffer.Bytes.Length);
-                    while (ar.Position < ar.FinalSampleCount)
-                    {
-                        int remaining = (int)Math.Min(buffer.Bytes.Length / buffer.PCM.BlockAlign, ar.FinalSampleCount - ar.Position);
-                        buffer.Length = remaining;
-                        ar.Write(buffer);
-                    }
-                }
-                _logger.WriteLine($"Done. Final Position: {ar.Position}, Expected: {ar.FinalSampleCount}");
-                return true;
+            }
+            _logger.WriteLine($"Done. Final Position: {ar.Position}, Expected: {ar.FinalSampleCount}");
+            return true;
         }
 
         public SubmitResult? Submit(string cuePath, string driveName, int quality)
         {
             _logger.WriteLine($"Submitting: {cuePath}");
-            
+
             // Dry-run control via CTDB_CLI_CALLER environment variable
             string? caller = Environment.GetEnvironmentVariable("CTDB_CLI_CALLER");
             bool isDryRun = string.IsNullOrEmpty(caller);
-            
+
             if (isDryRun)
             {
                 _logger.WriteLine("[DRY-RUN MODE] CTDB_CLI_CALLER environment variable is not set.");
             }
-            
+
             try
             {
                 var cueSheet = new CUESheet(_config);
@@ -345,7 +346,7 @@ namespace CTDB.CLI.Services
                 string artist = string.IsNullOrEmpty(cueSheet.Metadata.Artist) ? string.Empty : cueSheet.Metadata.Artist;
                 string title = string.IsNullOrEmpty(cueSheet.Metadata.Title) ? string.Empty : cueSheet.Metadata.Title;
                 string barcode = string.IsNullOrEmpty(cueSheet.Metadata.Barcode) ? string.Empty : cueSheet.Metadata.Barcode;
-                
+
                 var result = new SubmitResult
                 {
                     Metadata = new SubmittedMetadata
@@ -360,7 +361,7 @@ namespace CTDB.CLI.Services
 
                 // Construct userAgent
                 string userAgent = isDryRun ? "ctdb-cli(dry-run)" : $"ctdb-cli({caller})";
-                
+
                 // Display submission information
                 _logger.WriteLine("------------------------------------------------------------");
                 _logger.WriteLine("Submit Information:");
@@ -373,7 +374,7 @@ namespace CTDB.CLI.Services
                 _logger.WriteLine($"  Drive      :{driveName}");
                 _logger.WriteLine($"  UserAgent  :{userAgent}");
                 _logger.WriteLine("------------------------------------------------------------");
-                
+
                 if (isDryRun)
                 {
                     _logger.WriteLine("[DRY-RUN] Would submit with above information.");
@@ -386,7 +387,7 @@ namespace CTDB.CLI.Services
                 _logger.WriteLine("Contacting CTDB...");
                 ctdb.ContactDB(null, userAgent, driveName, true, false, CTDBMetadataSearch.Default);
 
-                if (ctdb.QueryExceptionStatus != WebExceptionStatus.Success && 
+                if (ctdb.QueryExceptionStatus != WebExceptionStatus.Success &&
                     (ctdb.QueryExceptionStatus != WebExceptionStatus.ProtocolError || ctdb.QueryResponseStatus != HttpStatusCode.NotFound))
                 {
                     string msg = $"Cannot upload: CTDB access failed. {ctdb.DBStatus}";
@@ -397,10 +398,10 @@ namespace CTDB.CLI.Services
                 }
 
                 _logger.WriteLine("Submitting...");
-                
+
                 // confidence is fixed at 1
                 var resp = ctdb.Submit(1, quality, artist, title, barcode);
-                
+
                 if (resp != null)
                 {
                     _logger.WriteLine($"Submit Result: {resp.status}");
@@ -491,10 +492,10 @@ namespace CTDB.CLI.Services
 
                 if (ctdb.Metadata == null && ctdb.Entries == null)
                 {
-                     string msg = $"CTDB returned {ctdb.QueryResponseStatus}";
-                     _logger.WriteLine(msg);
-                     string status = ctdb.QueryResponseStatus == HttpStatusCode.NotFound ? "not_found" : "failure";
-                     return new RepairResult { Status = status, Message = msg };
+                    string msg = $"CTDB returned {ctdb.QueryResponseStatus}";
+                    _logger.WriteLine(msg);
+                    string status = ctdb.QueryResponseStatus == HttpStatusCode.NotFound ? "not_found" : "failure";
+                    return new RepairResult { Status = status, Message = msg };
                 }
 
                 _logger.WriteLine("Verifying...");
