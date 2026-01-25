@@ -241,30 +241,8 @@ namespace CTDB.CLI.Services
         private bool FeedAudioToAR(AccurateRipVerify ar, CUESheet cueSheet, string cuePath, out string? errorMessage)
         {
             errorMessage = null;
-            // Find audio file
-            string audioPath = null;
-            var lines = File.ReadAllLines(cuePath);
-            foreach (var line in lines)
-            {
-                if (line.Trim().StartsWith("FILE"))
-                {
-                    var parts = line.Trim().Split('\"');
-                    if (parts.Length >= 2)
-                    {
-                        audioPath = Path.Combine(Path.GetDirectoryName(cuePath), parts[1]);
-                        break;
-                    }
-                }
-            }
-
-            if (audioPath == null || !File.Exists(audioPath))
-            {
-                // Fallback to checking same name as CUE
-                var altPath = Path.ChangeExtension(cuePath, ".wav");
-                if (File.Exists(altPath)) audioPath = altPath;
-            }
-
-            if (audioPath == null || !File.Exists(audioPath))
+            string? audioPath = FindAudioPath(cuePath);
+            if (audioPath == null)
             {
                 errorMessage = "Audio file not found.";
                 _logger.WriteLine(errorMessage);
