@@ -72,10 +72,23 @@ CTDB `lookup2.php`エンドポイントから返されたXMLをそのまま出�
     - `submitted_metadata`: 送信したメタデータ
         - `@artist`, `@title`, `@barcode`, `@drive`, `@quality`
     - `response`: APIからのレスポンス
-        - `@status`: 送信ステータス (`submitted`, `dry_run`, または `failure`)
+        - `@status`: 送信ステータス (`success`, `error`, または `parity needed`。ただし`parity needed`が返されることは通常ありません。APIから`parity needed`が返されたときは本プログラム内でparityの再送を行って`success`になるため。)
         - `@message`: メッセージ
-        - `@parity_needed`: パリティファイルのアップロードが必要か
+        - `@parity_needed`: パリティファイルのアップロードが必要か（通常`false`）
     - `raw_response`: CTDB `submit2.php`エンドポイントからのレスポンスを再シリアライズしたXML（元のXMLとは完全に一致しない可能性があります）
+
+**例**
+```
+<?xml version="1.0" encoding="utf-8"?>
+<ctdb xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://db.cuetools.net/ns/mmd-1.0#">
+  <submit_result status="submitted" xmlns="">
+    <submitted_metadata artist="Aice room" title="Archive vol.4" barcode="" drive="Optiarc - DVD RW AD-7290H" quality="100" />
+    <response status="submitted" message="FBEbHaHbTpNZrlyFqddJ9xgMAAY- has been confirmed" parity_needed="false" />
+    <raw_response>&lt;?xml version="1.0" encoding="utf-16"?&gt;
+&lt;ctdb xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" status="success" message="FBEbHaHbTpNZrlyFqddJ9xgMAAY- has been confirmed" npar="0" xmlns="http://db.cuetools.net/ns/mmd-1.0#" /&gt;</raw_response>
+  </submit_result>
+</ctdb>
+```
 
 ## 5. repair コマンド
 修復処理の結果を出力します。

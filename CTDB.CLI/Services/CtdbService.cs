@@ -416,7 +416,7 @@ namespace CTDB.CLI.Services
                     result.Status = "submitted";
                     result.Response = new SubmitResponse
                     {
-                        Status = "submitted",
+                        Status = resp.status,
                         Message = resp.message,
                         ParityNeeded = resp.ParityNeeded
                     };
