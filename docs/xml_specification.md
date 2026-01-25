@@ -72,10 +72,23 @@ Outputs submission content and results.
     - `submitted_metadata`: Metadata that was submitted
         - `@artist`, `@title`, `@barcode`, `@drive`, `@quality`
     - `response`: Parsed response from the API
-        - `@status`: Submission status (`submitted`, `dry_run`, or `failure`)
+        - `@status`: Submission status (`success`, `error`, or `parity needed`. Note: `parity needed` is rarely returned because the program automatically uploads the parity file, resulting in `success`.)
         - `@message`: Message
-        - `@parity_needed`: Whether parity file upload is required
+        - `@parity_needed`: Whether parity file upload is required (usually `false`)
     - `raw_response`: Re-serialized XML from the CTDB `submit2.php` response (may not exactly match the original response)
+
+**Example**
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<ctdb xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://db.cuetools.net/ns/mmd-1.0#">
+  <submit_result status="submitted" xmlns="">
+    <submitted_metadata artist="Artist Name" title="Album Title" barcode="" drive="Drive Name" quality="100" />
+    <response status="success" message="FBEbHaHbTpNZrlyFqddJ9xgMAAY- has been confirmed" parity_needed="false" />
+    <raw_response>&lt;?xml version="1.0" encoding="utf-16"?&gt;
+&lt;ctdb xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" status="success" message="FBEbHaHbTpNZrlyFqddJ9xgMAAY- has been confirmed" npar="0" xmlns="http://db.cuetools.net/ns/mmd-1.0#" /&gt;</raw_response>
+  </submit_result>
+</ctdb>
+```
 
 ## 5. repair command
 Outputs the results of the repair process.
