@@ -39,4 +39,12 @@ else
     echo "  - TagLib patch already applied."
 fi
 
+# UTF.Unknown patch (Automatic charset detection for CUE files)
+if patch -p0 -N --dry-run < patches/utf_unknown_encoding.patch >/dev/null 2>&1; then
+    patch -p0 < patches/utf_unknown_encoding.patch
+    echo "  - UTF.Unknown encoding patch applied."
+else
+    echo "  - UTF.Unknown encoding patch already applied."
+fi
+
 echo "Setup complete. You can now run 'dotnet build'."
