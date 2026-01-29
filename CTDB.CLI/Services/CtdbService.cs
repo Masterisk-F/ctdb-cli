@@ -241,7 +241,13 @@ namespace CTDB.CLI.Services
         private bool FeedAudioToAR(AccurateRipVerify ar, CUESheet cueSheet, string cuePath, out string? errorMessage)
         {
             errorMessage = null;
-            string? audioPath = FindAudioPath(cuePath);
+            if (cueSheet.SourcePaths.Count != 1)
+            {
+                errorMessage = "Only single audio file can be processed.";
+                _logger.WriteLine(errorMessage);
+                return false;
+            }
+            string? audioPath = cueSheet.SourcePaths[0];
             if (audioPath == null)
             {
                 errorMessage = "Audio file not found.";
@@ -441,7 +447,13 @@ namespace CTDB.CLI.Services
                 var ctdb = new CUEToolsDB(toc, _config.GetProxy());
                 ctdb.Init(ar);
 
-                string? audioPath = FindAudioPath(cuePath);
+                if (cueSheet.SourcePaths.Count != 1)
+                {
+                    string msg = "Only single audio file can be processed.";
+                    _logger.WriteLine(msg);
+                    return new RepairResult { Status = "failure", Message = msg };
+                }
+                string? audioPath = cueSheet.SourcePaths[0];
                 if (audioPath == null)
                 {
                     string msg = "Error: Audio file not found.";
@@ -637,37 +649,6 @@ namespace CTDB.CLI.Services
                 _logger.WriteLine(ex.StackTrace);
                 return new RepairResult { Status = "failure", Message = msg };
             }
-        }
-
-        // Helper to get the audio file path
-        private string? FindAudioPath(string cuePath)
-        {
-            string? audioPath = null;
-            var lines = File.ReadAllLines(cuePath);
-            foreach (var line in lines)
-            {
-                if (line.Trim().StartsWith("FILE"))
-                {
-                    var parts = line.Trim().Split('"');
-                    if (parts.Length >= 2)
-                    {
-                        audioPath = Path.Combine(Path.GetDirectoryName(cuePath) ?? ".", parts[1]);
-                        break;
-                    }
-                }
-            }
-
-            if (audioPath == null || !File.Exists(audioPath))
-            {
-                var altPath = Path.ChangeExtension(cuePath, ".wav");
-                if (File.Exists(altPath)) audioPath = altPath;
-            }
-
-            if (audioPath != null && File.Exists(audioPath))
-            {
-                return audioPath;
-            }
-            return null;
         }
     }
 }
