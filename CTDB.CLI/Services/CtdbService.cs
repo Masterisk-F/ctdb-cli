@@ -241,48 +241,70 @@ namespace CTDB.CLI.Services
         private bool FeedAudioToAR(AccurateRipVerify ar, CUESheet cueSheet, string cuePath, out string? errorMessage)
         {
             errorMessage = null;
-            if (cueSheet.SourcePaths.Count != 1)
+            if (cueSheet.SourcePaths.Count == 0)
             {
-                errorMessage = "Only single audio file can be processed.";
-                _logger.WriteLine(errorMessage);
-                return false;
-            }
-            string? audioPath = cueSheet.SourcePaths[0];
-            if (audioPath == null)
-            {
-                errorMessage = "Audio file not found.";
+                errorMessage = "No audio files found in CUE sheet.";
                 _logger.WriteLine(errorMessage);
                 return false;
             }
 
-            _logger.WriteLine($"Processing audio file: {audioPath}");
+            AudioBuffer? buffer = null;
 
-            var audioSource = AudioReadWrite.GetAudioSource(audioPath, null, _config);
-            if (audioSource == null)
+            foreach (string? audioPath in cueSheet.SourcePaths)
             {
-                errorMessage = "Failed to open audio source.";
-                _logger.WriteLine(errorMessage);
-                return false;
-            }
+                if (audioPath == null) continue;
 
-            var buffer = new AudioBuffer(audioSource, 1024 * 64);
+                _logger.WriteLine($"Processing audio file: {audioPath}");
 
-            while (audioSource.Read(buffer, -1) != 0)
-            {
-                if (ar.Position + buffer.Length > ar.FinalSampleCount)
+                var audioSource = AudioReadWrite.GetAudioSource(audioPath, null, _config);
+                if (audioSource == null)
                 {
-                    buffer.Length = (int)(ar.FinalSampleCount - ar.Position);
+                    errorMessage = $"Failed to open audio source: {audioPath}";
+                    _logger.WriteLine(errorMessage);
+                    return false;
                 }
 
-                if (buffer.Length > 0)
-                    ar.Write(buffer);
+                try
+                {
+                    if (buffer == null)
+                    {
+                        buffer = new AudioBuffer(audioSource, 1024 * 64);
+                    }
+                    else
+                    {
+                        buffer.Prepare(audioSource, 1024 * 64);
+                    }
+
+                    while (audioSource.Read(buffer, -1) != 0)
+                    {
+                        if (ar.Position + buffer.Length > ar.FinalSampleCount)
+                        {
+                            buffer.Length = (int)(ar.FinalSampleCount - ar.Position);
+                        }
+
+                        if (buffer.Length > 0)
+                            ar.Write(buffer);
+
+                        if (ar.Position >= ar.FinalSampleCount) break;
+                    }
+                }
+                finally
+                {
+                    audioSource.Close();
+                }
 
                 if (ar.Position >= ar.FinalSampleCount) break;
             }
 
             if (ar.Position < ar.FinalSampleCount)
             {
-                _logger.WriteLine($"\nWarning: Audio file shorter than TOC. Padding {ar.FinalSampleCount - ar.Position} samples.");
+                _logger.WriteLine($"\nWarning: Audio files combined shorter than TOC. Padding {ar.FinalSampleCount - ar.Position} samples.");
+                if (buffer == null)
+                {
+                    // Should not happen if there's at least one audio file, but for safety:
+                    var pcm = new AudioPCMConfig(16, 2, 44100);
+                    buffer = new AudioBuffer(pcm, 1024 * 64);
+                }
                 Array.Clear(buffer.Bytes, 0, buffer.Bytes.Length);
                 while (ar.Position < ar.FinalSampleCount)
                 {
@@ -447,24 +469,18 @@ namespace CTDB.CLI.Services
                 var ctdb = new CUEToolsDB(toc, _config.GetProxy());
                 ctdb.Init(ar);
 
-                if (cueSheet.SourcePaths.Count != 1)
+                if (cueSheet.SourcePaths.Count == 0)
                 {
-                    string msg = "Only single audio file can be processed.";
-                    _logger.WriteLine(msg);
-                    return new RepairResult { Status = "failure", Message = msg };
-                }
-                string? audioPath = cueSheet.SourcePaths[0];
-                if (audioPath == null)
-                {
-                    string msg = "Error: Audio file not found.";
+                    string msg = "No audio files found in CUE sheet.";
                     _logger.WriteLine(msg);
                     return new RepairResult { Status = "failure", Message = msg };
                 }
 
                 // Determine output file path and check if it already exists
+                // Use CUE filename as base for multi-file CUEs, or when individual audio file is not clear
                 string outputPath = Path.Combine(
-                    Path.GetDirectoryName(audioPath) ?? ".",
-                    Path.GetFileNameWithoutExtension(audioPath) + "_repaired.wav"
+                    Path.GetDirectoryName(cuePath) ?? ".",
+                    Path.GetFileNameWithoutExtension(cuePath) + "_repaired.wav"
                 );
 
                 if (File.Exists(outputPath))
@@ -603,34 +619,55 @@ namespace CTDB.CLI.Services
                 // Repair and write phase
                 _logger.WriteLine($"Writing repaired audio to: {outputPath}");
 
-                var audioSource = AudioReadWrite.GetAudioSource(audioPath, null, _config);
-                if (audioSource == null)
-                {
-                    _logger.WriteLine("Error: Failed to open audio source for repair.");
-                    result.Status = "failure";
-                    result.Message = "Failed to open audio source for repair.";
-                    return result;
-                }
-
                 var pcm = new AudioPCMConfig(16, 2, 44100);
                 var encoderSettings = new CUETools.Codecs.WAV.EncoderSettings(pcm);
                 var audioDest = new CUETools.Codecs.WAV.AudioEncoder(encoderSettings, outputPath, null);
-                audioDest.FinalSampleCount = audioSource.Length;
+                audioDest.FinalSampleCount = ar.FinalSampleCount;
 
-                var buffer = new AudioBuffer(audioSource, 1024 * 64);
+                AudioBuffer? buffer = null;
                 long samplesWritten = 0;
 
-                while (audioSource.Read(buffer, -1) != 0)
+                foreach (string? audioPath in cueSheet.SourcePaths)
                 {
-                    // Fix errors in the buffer using repair.Write()
-                    repairableEntry.repair.Write(buffer);
-                    audioDest.Write(buffer);
-                    samplesWritten += buffer.Length;
+                    if (audioPath == null) continue;
+
+                    var audioSource = AudioReadWrite.GetAudioSource(audioPath, null, _config);
+                    if (audioSource == null)
+                    {
+                        _logger.WriteLine($"Error: Failed to open audio source for repair: {audioPath}");
+                        audioDest.Close();
+                        result.Status = "failure";
+                        result.Message = $"Failed to open audio source for repair: {audioPath}";
+                        return result;
+                    }
+
+                    try
+                    {
+                        if (buffer == null)
+                        {
+                            buffer = new AudioBuffer(audioSource, 1024 * 64);
+                        }
+                        else
+                        {
+                            buffer.Prepare(audioSource, 1024 * 64);
+                        }
+
+                        while (audioSource.Read(buffer, -1) != 0)
+                        {
+                            // Fix errors in the buffer using repair.Write()
+                            repairableEntry.repair.Write(buffer);
+                            audioDest.Write(buffer);
+                            samplesWritten += buffer.Length;
+                        }
+                    }
+                    finally
+                    {
+                        audioSource.Close();
+                    }
                 }
 
                 repairableEntry.repair.Close();
                 audioDest.Close();
-                audioSource.Close();
 
                 _logger.WriteLine();
                 _logger.WriteLine($"Repair completed successfully!");
