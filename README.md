@@ -3,10 +3,11 @@
 A Linux command-line tool that interacts with CTDB (CUETools Database) to perform metadata retrieval, parity calculation, verification, repair, and uploading using CUE sheets and audio files.
 
 ## Features
-1. CTDB parity calculation from CUE + WAV/FLAC
+1. CTDB parity calculation from CUE + WAV/FLAC (Supports multi-file CUE)
 2. Error repair using CTDB parity data
 3. Submitting metadata and parity to CTDB
 4. Support for Linux (.NET 8.0) environment
+5. Automatic character encoding detection for CUE files
 
 ## Setup
 
@@ -34,6 +35,7 @@ Fetch dependencies and apply patches:
 > **Why Patches Are Needed**
 > - **Freedb.csproj**: The original project file uses an old format that is not correctly handled by `dotnet build` on Linux, so it is converted to the SDK-style format.
 > - **TagLib**: The original `CUESheet.cs` depends on some properties (like `AudioSampleCount`) that are missing in the current TagLib Sharp, so a fix is applied to compensate for this.
+> - **UTF.Unknown**: Automatically detects the character encoding of CUE files.
 
 Build:
 ```bash
@@ -90,13 +92,15 @@ ctdb-cli verify test.cue
 
 #### 4. Repair
 Uses CTDB parity data to repair errors in a ripped file.
-The repaired file is saved as `original_filename_repaired.wav`.
+The repaired file is saved as `cue_filename_repaired.wav`.
 ```bash
 ctdb-cli repair test.cue
 ```
 
 > **Note**: Repair requires sufficient parity data in CTDB.
 > If repair is not possible, an error message will be displayed.
+
+> **Note**: Even if the input is a multi-file CUE, the output will be a single WAV file.
 
 #### 5. Submit
 Submits the calculated parity and metadata to CTDB.

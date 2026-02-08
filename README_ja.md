@@ -3,10 +3,11 @@
 CTDB (CUETools Database) と対話し、CUEシートと音声ファイルを用いてメタデータの取得、パリティ計算、検証、修復、アップロードを行う Linux 用コマンドラインツール
 
 ## 特徴
-1. CUE + WAV/FLAC からの CTDB パリティ計算
+1. CUE + WAV/FLAC からの CTDB パリティ計算 (マルチファイルCUE対応)
 2. CTDBパリティデータを使用したエラー修復
 3. CTDB へのメタデータおよびパリティの送信
 4. Linux (.NET 8.0) 環境での動作サポート
+5. CUEシートの文字コード自動検出
 
 ## セットアップ
 
@@ -34,6 +35,7 @@ sudo make install
 > **パッチが必要な理由について**
 > - **Freedb.csproj**: オリジナルのプロジェクトファイルは古い形式であり、Linux上の `dotnet build` で正しく扱えないため、SDKスタイル形式に変換しています。
 > - **TagLib**: オリジナルの `CUESheet.cs` が依存している一部のプロパティ（`AudioSampleCount`等）が現在の TagLib Sharp に不足しているため、これを補う修正を適用しています。
+> - **UTF.Unknown**: CUEシートの文字コードを自動検出します。
 
 ビルド:
 ```bash
@@ -89,13 +91,15 @@ ctdb-cli verify test.cue
 
 #### 4. Repair (修復)
 CTDBのパリティデータを使用して、エラーのあるリップファイルを修復します。
-修復されたファイルは `元ファイル名_repaired.wav` として保存されます。
+修復されたファイルは `CUEファイル名_repaired.wav` として保存されます。
 ```bash
 ctdb-cli repair test.cue
 ```
 
 > **注意**: 修復にはCTDB上に十分なパリティデータが必要です。
 > 修復不可能な場合はエラーメッセージが表示されます。
+
+> **注意**: 入力が単一ファイルCUEかマルチファイルCUEかにかかわらず、出力は単一のWAVファイルになります。
 
 #### 5. Submit (送信)
 計算したパリティとメタデータをCTDBに送信します。
