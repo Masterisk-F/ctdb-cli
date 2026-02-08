@@ -47,4 +47,12 @@ else
     echo "  - UTF.Unknown encoding patch already applied."
 fi
 
+# Do not generate an error even if the track numbers are not consecutive
+if patch -p0 -N --dry-run < patches/CUESheet_tracknum.patch >/dev/null 2>&1; then
+    patch -p0 < patches/CUESheet_tracknum.patch
+    echo "  - cuesheet tracknum patch applied."
+else
+    echo "  - cuesheet tracknum patch already applied."
+fi
+
 echo "Setup complete. You can now run 'dotnet build'."
