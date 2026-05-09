@@ -6,7 +6,7 @@ A Linux command-line tool that interacts with CTDB (CUETools Database) to perfor
 1. CTDB parity calculation from CUE + WAV/FLAC (Supports multi-file CUE)
 2. Error repair using CTDB parity data
 3. Submitting metadata and parity to CTDB
-4. Support for Linux (.NET 8.0) environment
+4. Support for Linux (.NET 10.0) environment
 5. Automatic character encoding detection for CUE files
 
 ## Setup
