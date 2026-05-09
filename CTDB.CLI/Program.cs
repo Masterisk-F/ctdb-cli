@@ -30,6 +30,7 @@ namespace CTDB.CLI
                 Console.WriteLine("  calc     - Calculate parity");
                 Console.WriteLine("  verify   - Verify against CTDB");
                 Console.WriteLine("  repair   - Repair using CTDB parity");
+                Console.WriteLine("             Option: --target <CRC> (8-character hex)");
                 Console.WriteLine("  submit   - Submit parity to CTDB");
                 Console.WriteLine("             Required: --drive <name> --quality <1-100>");
                 Console.WriteLine("             Note: Set CTDB_CLI_CALLER env var to enable actual submission.");
@@ -96,8 +97,11 @@ namespace CTDB.CLI
                         }
                         break;
                     case "repair":
-                        finalResult.Repair = service.Repair(cuePath);
-                        commandResult = finalResult.Repair;
+                        {
+                            string? targetCrc = GetArgValue(remainingArgs, "--target");
+                            finalResult.Repair = service.Repair(cuePath, targetCrc);
+                            commandResult = finalResult.Repair;
+                        }
                         break;
                     default:
                         Console.Error.WriteLine($"Unknown command: {command}");
