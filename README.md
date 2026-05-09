@@ -94,8 +94,12 @@ ctdb-cli verify test.cue
 Uses CTDB parity data to repair errors in a ripped file.
 The repaired file is saved as `cue_filename_repaired.wav`.
 ```bash
-ctdb-cli repair test.cue
+ctdb-cli repair test.cue [--target <CRC>]
 ```
+
+| Argument | Required | Description |
+|----------|----------|-------------|
+| `--target` |  | Specify the exact parity data to use for repair using an 8-character hex CRC (e.g., `a1b2c3d4`). You can find this CRC in the output of the `verify` command (`Conf: X, CRC: YYYYYYYY`). If omitted, the entry with the highest confidence is automatically selected. |
 
 > **Note**: Repair requires sufficient parity data in CTDB.
 > If repair is not possible, an error message will be displayed.

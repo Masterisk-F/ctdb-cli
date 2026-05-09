@@ -93,8 +93,12 @@ ctdb-cli verify test.cue
 CTDBのパリティデータを使用して、エラーのあるリップファイルを修復します。
 修復されたファイルは `CUEファイル名_repaired.wav` として保存されます。
 ```bash
-ctdb-cli repair test.cue
+ctdb-cli repair test.cue [--target <CRC>]
 ```
+
+| 引数 | 必須 | 説明 |
+|------|------|------|
+| `--target` |  | 修復に使用するパリティデータを 8桁の16進数 CRC で指定します（例: `a1b2c3d4`）。この CRC は `verify` コマンドの出力（`Conf: X, CRC: YYYYYYYY`）から確認できます。省略時は Confidence が最も高いエントリが自動選択されます。 |
 
 > **注意**: 修復にはCTDB上に十分なパリティデータが必要です。
 > 修復不可能な場合はエラーメッセージが表示されます。

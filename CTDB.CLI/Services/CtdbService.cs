@@ -453,9 +453,13 @@ namespace CTDB.CLI.Services
             }
         }
 
-        public RepairResult? Repair(string cuePath)
+        public RepairResult? Repair(string cuePath, string? targetCrc = null)
         {
             _logger.WriteLine($"Repairing: {cuePath}");
+            if (!string.IsNullOrEmpty(targetCrc))
+            {
+                _logger.WriteLine($"Target CRC: {targetCrc}");
+            }
             try
             {
                 var cueSheet = new CUESheet(_config);
@@ -515,14 +519,47 @@ namespace CTDB.CLI.Services
 
                 // Find a repairable entry
                 CUETools.CTDB.DBEntry? repairableEntry = null;
-                foreach (var entry in ctdb.Entries)
+                if (!string.IsNullOrEmpty(targetCrc))
                 {
-                    if (entry.hasErrors && entry.canRecover && entry.repair != null)
+                    _logger.WriteLine($"Searching for entry with CRC: {targetCrc}");
+                    foreach (var entry in ctdb.Entries)
                     {
-                        // Select the entry with the highest confidence
-                        if (repairableEntry == null || entry.conf > repairableEntry.conf)
+                        if (entry.crc.ToString("x8").Equals(targetCrc, StringComparison.OrdinalIgnoreCase))
                         {
-                            repairableEntry = entry;
+                            if (entry.hasErrors && entry.canRecover && entry.repair != null)
+                            {
+                                repairableEntry = entry;
+                            }
+                            else if (!entry.hasErrors)
+                            {
+                                _logger.WriteLine($"Entry with CRC {targetCrc} does not need repair (status: clean).");
+                            }
+                            else
+                            {
+                                _logger.WriteLine($"Entry with CRC {targetCrc} is not recoverable.");
+                            }
+                            break;
+                        }
+                    }
+
+                    if (repairableEntry == null)
+                    {
+                        string msg = $"Error: Specified target CRC {targetCrc} not found or not repairable.";
+                        _logger.WriteLine(msg);
+                        return new RepairResult { Status = "failure", Message = msg };
+                    }
+                }
+                else
+                {
+                    foreach (var entry in ctdb.Entries)
+                    {
+                        if (entry.hasErrors && entry.canRecover && entry.repair != null)
+                        {
+                            // Select the entry with the highest confidence
+                            if (repairableEntry == null || entry.conf > repairableEntry.conf)
+                            {
+                                repairableEntry = entry;
+                            }
                         }
                     }
                 }
